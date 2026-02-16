@@ -5,8 +5,8 @@
   --bg-side: #0a1120;
   --panel: #0f1728;
   --panel-2: #111b31;
-  --ink: #e9effb;
-  --muted: #96aac7;
+  --ink: #c8d8ff;
+  --muted: #8ea3c8;
   --line: #273958;
   --green: #39ff14;
   --green-soft: #1ec96b;
@@ -229,19 +229,21 @@ nav {
 }
 
 .quiz-option-card.selected {
-  border-color: var(--purple);
-  background: rgba(181, 23, 255, 0.14);
+  border-color: #60a5fa;
+  background: rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.28);
 }
 
 .quiz-option-card.correct {
-  border-color: var(--green);
-  background: rgba(57, 255, 20, 0.18);
-  box-shadow: 0 0 0 1px rgba(57, 255, 20, 0.35);
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.22);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.45);
 }
 
 .quiz-option-card.wrong {
-  border-color: #ff7a7a;
-  background: rgba(255, 122, 122, 0.18);
+  border-color: #fb7185;
+  background: rgba(244, 63, 94, 0.2);
+  box-shadow: 0 0 0 1px rgba(251, 113, 133, 0.26);
 }
 
 .study-quiz-actions {
@@ -262,12 +264,76 @@ nav {
   font-size: 0.9rem;
 }
 
+.quiz-feedback-block {
+  border: 1px solid #35507c;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #111c36;
+}
+
+.quiz-feedback-block p {
+  margin: 4px 0;
+}
+
+.quiz-feedback-status {
+  font-weight: 700;
+}
+
+.quiz-feedback-answer {
+  margin-bottom: 12px !important;
+  line-height: 1.5;
+}
+
+.quiz-feedback-heading {
+  margin: 0 0 8px !important;
+  line-height: 1.45;
+}
+
+.quiz-feedback-section + .quiz-feedback-section {
+  margin-top: 10px;
+}
+
+.quiz-feedback-section-title {
+  margin: 0 0 6px !important;
+  letter-spacing: 0.01em;
+}
+
+.quiz-feedback-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.quiz-feedback-list li {
+  margin: 4px 0;
+  line-height: 1.42;
+}
+
 .quiz-feedback.ok {
-  color: #8ff0b0;
+  color: #b6f9ce;
 }
 
 .quiz-feedback.bad {
-  color: #ff9f9f;
+  color: #ffc8d2;
+}
+
+.quiz-feedback-block.ok {
+  border-color: #2f8f63;
+  background: rgba(13, 49, 33, 0.52);
+  color: #eef4ff;
+}
+
+.quiz-feedback-block.bad {
+  border-color: #a54a5a;
+  background: rgba(64, 20, 31, 0.5);
+  color: #eef4ff;
+}
+
+.quiz-feedback-block.ok .quiz-feedback-status {
+  color: #b6f9ce;
+}
+
+.quiz-feedback-block.bad .quiz-feedback-status {
+  color: #ffc8d2;
 }
 
 .study-quiz-result p {

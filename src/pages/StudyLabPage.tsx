@@ -21,7 +21,10 @@ interface QuizQuestion {
   prompt: string;
   options: string[];
   correct: string;
-  explanation: string;
+  explanation: {
+    plain: string[];
+    technical: string[];
+  };
 }
 
 interface PatternQuizProfile {
@@ -311,6 +314,125 @@ function categoryToLabel(category: QuizCategory): string {
   return category.replace(/_/g, ' ');
 }
 
+function detailedWhySections(
+  category: QuizCategory,
+  patternKey: PatternKey,
+  profile: PatternQuizProfile,
+): { plain: string[]; technical: string[] } {
+  const pattern = patternByKey[patternKey];
+  switch (category) {
+    case 'scenario':
+      return {
+        plain: [
+          `This matches the real job this pattern is designed for: ${profile.scenario}.`,
+          `Plain-English fit: ${pattern.whatItDoes}`,
+          'This is the direct problem shape this pattern solves well.',
+        ],
+        technical: [
+          `Problem-shape alignment: ${profile.scenario}`,
+          `Mechanism match: ${profile.mechanic}`,
+          `Invariant support: ${profile.invariant}`,
+        ],
+      };
+    case 'mechanic':
+      return {
+        plain: [
+          `Core process: ${profile.mechanic}.`,
+          `Each step keeps this rule true: ${profile.invariant}.`,
+          'If that rule holds from start to finish, the final answer is trustworthy.',
+        ],
+        technical: [
+          `Transition mechanism: ${profile.mechanic}`,
+          `Loop/step invariant: ${profile.invariant}`,
+          'Correctness sketch: initialize invariant, maintain per step, conclude at termination.',
+        ],
+      };
+    case 'time_complexity':
+      return {
+        plain: [
+          'This time card best matches how work grows as input grows.',
+          `Selected card: ${profile.timeComplexity}`,
+          `Pattern runtime in plain terms: ${pattern.englishLine}`,
+        ],
+        technical: [
+          `Complexity card selected: ${profile.timeComplexity}`,
+          `Asymptotic runtime model: ${pattern.timeComplexity}`,
+          'Language/runtime constants can change speed, but not the dominant Big-O growth class.',
+        ],
+      };
+    case 'space_complexity':
+      return {
+        plain: [
+          'This space card best matches how extra memory grows with input size.',
+          `Selected card: ${profile.spaceComplexity}`,
+          `Pattern memory note: ${pattern.spaceComplexity}`,
+        ],
+        technical: [
+          `Complexity card selected: ${profile.spaceComplexity}`,
+          `Asymptotic memory model: ${pattern.spaceComplexity}`,
+          'Auxiliary structure size (set/map/queue/cache) is usually the dominant memory term.',
+        ],
+      };
+    case 'invariant':
+      return {
+        plain: [
+          'An invariant is a safety rule that must stay true while the algorithm runs.',
+          `For this pattern, that rule is: ${profile.invariant}.`,
+          'When this rule breaks, answers become unreliable even if code still runs.',
+        ],
+        technical: [
+          `Invariant: ${profile.invariant}`,
+          'Invariant failure invalidates the proof obligation at that step.',
+          'Use invariant checks while debugging to catch logic drift early.',
+        ],
+      };
+    case 'pitfall':
+      return {
+        plain: [
+          `Common trap: ${profile.pitfall}.`,
+          'This error usually causes wrong results on edge cases first.',
+          'Avoiding this trap removes a high-probability bug source.',
+        ],
+        technical: [
+          `Failure mode: ${profile.pitfall}`,
+          'This typically violates pattern assumptions or invariants.',
+          'Symptom pattern: passes easy cases, fails boundary/adversarial cases.',
+        ],
+      };
+    case 'weak_fit':
+      return {
+        plain: [
+          `Weak fit condition: ${profile.weakFit}.`,
+          'The pattern may still run, but it is usually not the cleanest or safest choice.',
+          'Choosing a better-fit pattern reduces complexity and bugs.',
+        ],
+        technical: [
+          `Weak-fit condition: ${profile.weakFit}`,
+          'Constraint mismatch usually harms either asymptotic efficiency or proof simplicity.',
+          'Prefer a pattern whose assumptions directly match the problem constraints.',
+        ],
+      };
+    case 'edge_case':
+      return {
+        plain: [
+          `High-value boundary test: ${profile.edgeCase}.`,
+          'Edge cases expose hidden bugs that normal inputs can miss.',
+          'Run this test early to verify setup, boundaries, and stop conditions.',
+        ],
+        technical: [
+          `High-value edge case: ${profile.edgeCase}`,
+          'Boundary conditions are where off-by-one and initialization defects appear first.',
+          'A robust solution should satisfy the invariant and complexity claims on this case too.',
+        ],
+      };
+    default:
+      return {
+        plain: ['This option best matches the pattern behavior and constraints.'],
+        technical: ['Best fit under the given constraints and invariant model.'],
+      };
+  }
+}
+
 function buildOptions(correct: string, pool: string[], seed: number): string[] {
   const uniquePool = Array.from(new Set(pool.filter((x) => x !== correct)));
   if (uniquePool.length === 0) return [correct];
@@ -355,58 +477,60 @@ function buildFollowUpQuestion(
   seed: number,
 ): QuizQuestion {
   const profile = profiles[patternKey];
-  const patternInfo = patternByKey[patternKey];
   const others = Object.entries(profiles)
     .filter(([k]) => k !== patternKey)
     .map(([, value]) => value);
 
-  const categoryMap: Record<QuizCategory, { prompt: string; correct: string; explanation: string; pool: string[] }> = {
+  const categoryMap: Record<
+    QuizCategory,
+    { prompt: string; correct: string; explanation: { plain: string[]; technical: string[] }; pool: string[] }
+  > = {
     scenario: {
       prompt: `Follow-up (${patternName}): choose the best-fit scenario.`,
       correct: profile.scenario,
-      explanation: `Use case refresher: ${profile.scenario}`,
+      explanation: detailedWhySections('scenario', patternKey, profile),
       pool: others.map((x) => x.scenario),
     },
     mechanic: {
       prompt: `Follow-up (${patternName}): identify the core mechanic.`,
       correct: profile.mechanic,
-      explanation: `Mechanic refresher: ${profile.mechanic}`,
+      explanation: detailedWhySections('mechanic', patternKey, profile),
       pool: others.map((x) => x.mechanic),
     },
     time_complexity: {
       prompt: `Follow-up (${patternName}): choose the best matching time-complexity card.`,
       correct: profile.timeComplexity,
-      explanation: `Card answer: ${profile.timeComplexity} | Exact pattern note: ${patternInfo.timeComplexity}`,
+      explanation: detailedWhySections('time_complexity', patternKey, profile),
       pool: TIME_COMPLEXITY_CARD_OPTIONS.filter((x) => x !== profile.timeComplexity),
     },
     space_complexity: {
       prompt: `Follow-up (${patternName}): choose the best matching space-complexity card.`,
       correct: profile.spaceComplexity,
-      explanation: `Card answer: ${profile.spaceComplexity} | Exact pattern note: ${patternInfo.spaceComplexity}`,
+      explanation: detailedWhySections('space_complexity', patternKey, profile),
       pool: SPACE_COMPLEXITY_CARD_OPTIONS.filter((x) => x !== profile.spaceComplexity),
     },
     invariant: {
       prompt: `Follow-up (${patternName}): which invariant must stay true?`,
       correct: profile.invariant,
-      explanation: `Invariant refresher: ${profile.invariant}`,
+      explanation: detailedWhySections('invariant', patternKey, profile),
       pool: others.map((x) => x.invariant),
     },
     pitfall: {
       prompt: `Follow-up (${patternName}): which bug is most likely?`,
       correct: profile.pitfall,
-      explanation: `Pitfall refresher: ${profile.pitfall}`,
+      explanation: detailedWhySections('pitfall', patternKey, profile),
       pool: others.map((x) => x.pitfall),
     },
     weak_fit: {
       prompt: `Follow-up (${patternName}): when is this pattern a weak choice?`,
       correct: profile.weakFit,
-      explanation: `Weak-fit refresher: ${profile.weakFit}`,
+      explanation: detailedWhySections('weak_fit', patternKey, profile),
       pool: others.map((x) => x.weakFit),
     },
     edge_case: {
       prompt: `Follow-up (${patternName}): which edge case should be tested first?`,
       correct: profile.edgeCase,
-      explanation: `Edge-case refresher: ${profile.edgeCase}`,
+      explanation: detailedWhySections('edge_case', patternKey, profile),
       pool: others.map((x) => x.edgeCase),
     },
   };
@@ -571,6 +695,7 @@ export function StudyLabPage() {
   };
 
   const pattern = patternByKey[patternKey];
+  const activeProfile = QUIZ_PROFILE[patternKey];
   const patternIndex = PATTERNS.findIndex((p) => p.key === patternKey);
 
   useEffect(() => {
@@ -671,7 +796,7 @@ export function StudyLabPage() {
         prompt: 'Which task is the best fit?',
         options: buildOptions(profile.scenario, others.map((x) => x.scenario), patternIndex + 11 + optionOrderSeed),
         correct: profile.scenario,
-        explanation: `Use this pattern when: ${pattern.whenToUse}`,
+        explanation: detailedWhySections('scenario', patternKey, profile),
       },
       {
         id: 'mechanic',
@@ -679,7 +804,7 @@ export function StudyLabPage() {
         prompt: 'What core process drives this pattern?',
         options: buildOptions(profile.mechanic, others.map((x) => x.mechanic), patternIndex + 13 + optionOrderSeed),
         correct: profile.mechanic,
-        explanation: `Core behavior: ${profile.mechanic}`,
+        explanation: detailedWhySections('mechanic', patternKey, profile),
       },
       {
         id: 'time_complexity',
@@ -691,7 +816,7 @@ export function StudyLabPage() {
           patternIndex + 17 + optionOrderSeed,
         ),
         correct: profile.timeComplexity,
-        explanation: `Card answer: ${profile.timeComplexity}. Exact pattern note: ${pattern.timeComplexity}.`,
+        explanation: detailedWhySections('time_complexity', patternKey, profile),
       },
       {
         id: 'space_complexity',
@@ -703,7 +828,7 @@ export function StudyLabPage() {
           patternIndex + 18 + optionOrderSeed,
         ),
         correct: profile.spaceComplexity,
-        explanation: `Card answer: ${profile.spaceComplexity}. Exact pattern note: ${pattern.spaceComplexity}.`,
+        explanation: detailedWhySections('space_complexity', patternKey, profile),
       },
       {
         id: 'invariant',
@@ -711,7 +836,7 @@ export function StudyLabPage() {
         prompt: 'Which invariant should stay true while running it?',
         options: buildOptions(profile.invariant, others.map((x) => x.invariant), patternIndex + 19 + optionOrderSeed),
         correct: profile.invariant,
-        explanation: `Invariant reminder: ${profile.invariant}`,
+        explanation: detailedWhySections('invariant', patternKey, profile),
       },
       {
         id: 'pitfall',
@@ -719,7 +844,7 @@ export function StudyLabPage() {
         prompt: 'Which bug is most characteristic for this pattern?',
         options: buildOptions(profile.pitfall, others.map((x) => x.pitfall), patternIndex + 23 + optionOrderSeed),
         correct: profile.pitfall,
-        explanation: `Pitfall reminder: ${profile.pitfall}`,
+        explanation: detailedWhySections('pitfall', patternKey, profile),
       },
       {
         id: 'weak_fit',
@@ -727,7 +852,7 @@ export function StudyLabPage() {
         prompt: 'When is this pattern usually a poor fit?',
         options: buildOptions(profile.weakFit, others.map((x) => x.weakFit), patternIndex + 29 + optionOrderSeed),
         correct: profile.weakFit,
-        explanation: `Use caution when: ${profile.weakFit}`,
+        explanation: detailedWhySections('weak_fit', patternKey, profile),
       },
       {
         id: 'edge_case',
@@ -735,7 +860,7 @@ export function StudyLabPage() {
         prompt: 'Which edge case should you test first?',
         options: buildOptions(profile.edgeCase, others.map((x) => x.edgeCase), patternIndex + 31 + optionOrderSeed),
         correct: profile.edgeCase,
-        explanation: `Edge-case reminder: ${profile.edgeCase}`,
+        explanation: detailedWhySections('edge_case', patternKey, profile),
       },
     ];
 
@@ -992,6 +1117,7 @@ export function StudyLabPage() {
           const selected = answers[question.id] ?? '';
           const isCorrect = selected === question.correct;
           const showCorrectOutlines = checked || showAnswers;
+          const showExplanation = checked || showAnswers;
           return (
             <article key={question.id} className="card quiz-question-card">
               <h4 className="quiz-question-title">{idx + 1}) {question.prompt}</h4>
@@ -1019,10 +1145,35 @@ export function StudyLabPage() {
                   );
                 })}
               </div>
-              {checked && (
-                <p className={`quiz-feedback ${isCorrect ? 'ok' : 'bad'}`}>
-                  {isCorrect ? 'Correct.' : `Correct answer: ${question.correct}.`} {question.explanation}
-                </p>
+              {showExplanation && (
+                <div className={`quiz-feedback quiz-feedback-block ${checked ? (isCorrect ? 'ok' : 'bad') : 'ok'}`}>
+                  {checked && <p className="quiz-feedback-status">{isCorrect ? 'Correct.' : 'Not quite.'}</p>}
+                  <p className="quiz-feedback-answer"><strong>Correct answer:</strong> {question.correct}</p>
+                  <p className="quiz-feedback-heading"><strong>Why it&apos;s correct:</strong></p>
+                  <div className="quiz-feedback-section">
+                    <p className="quiz-feedback-section-title"><strong>Plain-English:</strong></p>
+                    <ul className="quiz-feedback-list">
+                      {question.explanation.plain.map((point, i) => (
+                        <li key={`${question.id}_plain_${i}`}>{point}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="quiz-feedback-section">
+                    <p className="quiz-feedback-section-title"><strong>Technical reasoning:</strong></p>
+                    <ul className="quiz-feedback-list">
+                      {question.explanation.technical.map((point, i) => (
+                        <li key={`${question.id}_tech_${i}`}>{point}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="quiz-feedback-section">
+                    <p className="quiz-feedback-section-title"><strong>When to use:</strong></p>
+                    <ul className="quiz-feedback-list">
+                      <li>{pattern.whenToUse}</li>
+                      <li>Avoid this pattern when: {activeProfile.weakFit}</li>
+                    </ul>
+                  </div>
+                </div>
               )}
             </article>
           );
@@ -1116,10 +1267,35 @@ export function StudyLabPage() {
                 New Follow-up
               </button>
             </div>
-            {followUpChecked && (
-              <p className={`quiz-feedback ${followUpAnswer === followUpQuestion.correct ? 'ok' : 'bad'}`}>
-                {followUpAnswer === followUpQuestion.correct ? 'Correct.' : `Correct answer: ${followUpQuestion.correct}.`} {followUpQuestion.explanation}
-              </p>
+            {(followUpChecked || showAnswers) && (
+              <div className={`quiz-feedback quiz-feedback-block ${followUpChecked ? (followUpAnswer === followUpQuestion.correct ? 'ok' : 'bad') : 'ok'}`}>
+                {followUpChecked && <p className="quiz-feedback-status">{followUpAnswer === followUpQuestion.correct ? 'Correct.' : 'Not quite.'}</p>}
+                <p className="quiz-feedback-answer"><strong>Correct answer:</strong> {followUpQuestion.correct}</p>
+                <p className="quiz-feedback-heading"><strong>Why it&apos;s correct:</strong></p>
+                <div className="quiz-feedback-section">
+                  <p className="quiz-feedback-section-title"><strong>Plain-English:</strong></p>
+                  <ul className="quiz-feedback-list">
+                    {followUpQuestion.explanation.plain.map((point, i) => (
+                      <li key={`${followUpQuestion.id}_plain_${i}`}>{point}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="quiz-feedback-section">
+                  <p className="quiz-feedback-section-title"><strong>Technical reasoning:</strong></p>
+                  <ul className="quiz-feedback-list">
+                    {followUpQuestion.explanation.technical.map((point, i) => (
+                      <li key={`${followUpQuestion.id}_tech_${i}`}>{point}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="quiz-feedback-section">
+                  <p className="quiz-feedback-section-title"><strong>When to use:</strong></p>
+                  <ul className="quiz-feedback-list">
+                    <li>{pattern.whenToUse}</li>
+                    <li>Avoid this pattern when: {activeProfile.weakFit}</li>
+                  </ul>
+                </div>
+              </div>
             )}
           </article>
         )}
