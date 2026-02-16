@@ -40,12 +40,44 @@ interface TermHelpItem {
   plain: string;
 }
 
+const TIME_COMPLEXITY_CARD_OPTIONS = [
+  'O(1): Constant time - Runtime stays about the same as input grows.',
+  'O(log n): Logarithmic time - Each step cuts the problem size down a lot.',
+  'O(n): Linear time - One full pass over the input.',
+  'O(n log n): Linearithmic time - You process n items, and each one takes about log n work.',
+  'O(n^2): Quadratic time - Nested loops over the input.',
+] as const;
+
+const SPACE_COMPLEXITY_CARD_OPTIONS = [
+  'O(1): Constant extra space - The extra memory stays about the same as input grows.',
+  'O(log n): Logarithmic extra space - Extra memory grows slowly; doubling input adds only a little more.',
+  'O(n): Linear extra space - Extra memory grows in direct proportion to input size.',
+  'O(V): Graph-linear extra space - For graphs, extra memory grows with the number of vertices.',
+  'O(states): State-based extra space - For DP, extra memory grows with how many states you store.',
+] as const;
+
+const TIME_CARD = {
+  O1: TIME_COMPLEXITY_CARD_OPTIONS[0],
+  OLOGN: TIME_COMPLEXITY_CARD_OPTIONS[1],
+  ON: TIME_COMPLEXITY_CARD_OPTIONS[2],
+  ONLOGN: TIME_COMPLEXITY_CARD_OPTIONS[3],
+  ON2: TIME_COMPLEXITY_CARD_OPTIONS[4],
+} as const;
+
+const SPACE_CARD = {
+  O1: SPACE_COMPLEXITY_CARD_OPTIONS[0],
+  OLOGN: SPACE_COMPLEXITY_CARD_OPTIONS[1],
+  ON: SPACE_COMPLEXITY_CARD_OPTIONS[2],
+  OV: SPACE_COMPLEXITY_CARD_OPTIONS[3],
+  OSTATES: SPACE_COMPLEXITY_CARD_OPTIONS[4],
+} as const;
+
 const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   hash_set: {
     scenario: 'Detect whether any value appears more than once in one pass.',
     mechanic: 'Track seen values in a uniqueness structure and stop on repeat.',
-    timeComplexity: 'O(n) average for full duplicate-check pass; O(1) average per set operation',
-    spaceComplexity: 'O(n) worst-case (or O(u) unique values)',
+    timeComplexity: TIME_CARD.O1,
+    spaceComplexity: SPACE_CARD.ON,
     invariant: 'All unique values seen so far are recorded.',
     pitfall: 'Assuming hash iteration is naturally sorted.',
     weakFit: 'You need sorted/range queries rather than membership checks.',
@@ -54,8 +86,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   hash_map: {
     scenario: 'Count occurrences for every distinct value.',
     mechanic: 'Update key -> count for each element as you scan.',
-    timeComplexity: 'O(n) average for full counting pass; O(1) average per map update/get',
-    spaceComplexity: 'O(n) worst-case (or O(k) distinct keys)',
+    timeComplexity: TIME_CARD.O1,
+    spaceComplexity: SPACE_CARD.ON,
     invariant: 'Stored count per key matches processed occurrences.',
     pitfall: 'Forgetting missing keys should start from zero.',
     weakFit: 'You only need yes/no membership with no payload per key.',
@@ -64,8 +96,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   two_pointers: {
     scenario: 'Find target pair efficiently in sorted array.',
     mechanic: 'Move left/right pointer based on sum comparison.',
-    timeComplexity: 'O(n)',
-    spaceComplexity: 'O(1)',
+    timeComplexity: TIME_CARD.ON,
+    spaceComplexity: SPACE_CARD.O1,
     invariant: 'Candidate interval shrinks monotonically.',
     pitfall: 'Applying directly on unsorted data.',
     weakFit: 'Data is unsorted and cannot be sorted/preprocessed.',
@@ -74,8 +106,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   sliding_window: {
     scenario: 'Optimize over contiguous subarrays under a validity rule.',
     mechanic: 'Expand right and shrink left while restoring validity.',
-    timeComplexity: 'O(n)',
-    spaceComplexity: 'O(1) or O(k)',
+    timeComplexity: TIME_CARD.ON,
+    spaceComplexity: SPACE_CARD.O1,
     invariant: 'Window satisfies constraint after each shrink phase.',
     pitfall: 'Using positive-only shrinking logic with negatives.',
     weakFit: 'Problem needs non-contiguous selection rather than windows.',
@@ -84,8 +116,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   stack: {
     scenario: 'Validate nested structure ordering.',
     mechanic: 'Push open state and pop on matching close.',
-    timeComplexity: 'O(n)',
-    spaceComplexity: 'O(n)',
+    timeComplexity: TIME_CARD.ON,
+    spaceComplexity: SPACE_CARD.ON,
     invariant: 'Top of stack is latest unresolved opener/state.',
     pitfall: 'Not checking leftover stack items at end.',
     weakFit: 'Task requires random access updates, not LIFO order.',
@@ -94,8 +126,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   bfs: {
     scenario: 'Shortest path by edge count in unweighted graph.',
     mechanic: 'Process frontier level-by-level with FIFO queue.',
-    timeComplexity: 'O(V + E)',
-    spaceComplexity: 'O(V)',
+    timeComplexity: TIME_CARD.ON,
+    spaceComplexity: SPACE_CARD.OV,
     invariant: 'First visit gives minimum unweighted distance.',
     pitfall: 'Assuming BFS always visits fewer nodes than DFS for target checks.',
     weakFit: 'Edges have varying positive weights.',
@@ -104,8 +136,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   dfs: {
     scenario: 'Explore connected components deeply with backtracking.',
     mechanic: 'Recurse/stack deep before exploring siblings.',
-    timeComplexity: 'O(V + E)',
-    spaceComplexity: 'O(V)',
+    timeComplexity: TIME_CARD.ON,
+    spaceComplexity: SPACE_CARD.OV,
     invariant: 'Visited nodes are never re-entered.',
     pitfall: 'Assuming the first path found is shortest.',
     weakFit: 'Need guaranteed shortest unweighted path.',
@@ -114,8 +146,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   binary_search: {
     scenario: 'Locate boundary/index in sorted or monotonic space.',
     mechanic: 'Check midpoint and discard half each step.',
-    timeComplexity: 'O(log n)',
-    spaceComplexity: 'O(1)',
+    timeComplexity: TIME_CARD.OLOGN,
+    spaceComplexity: SPACE_CARD.O1,
     invariant: 'Answer stays inside [lo, hi).',
     pitfall: 'Applying binary search on unsorted/non-monotonic input.',
     weakFit: 'No ordering/monotonic property exists.',
@@ -124,8 +156,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   dp: {
     scenario: 'Solve overlapping subproblems with cached states.',
     mechanic: 'Define state/transition and compute each state once.',
-    timeComplexity: 'O(states * transitions)',
-    spaceComplexity: 'O(states)',
+    timeComplexity: TIME_CARD.ON2,
+    spaceComplexity: SPACE_CARD.OSTATES,
     invariant: 'Cached state values are reused, not recomputed.',
     pitfall: 'Wrong state definition or missing base case.',
     weakFit: 'Subproblems are independent with no overlap.',
@@ -134,8 +166,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   prefix_difference: {
     scenario: 'Answer many range sums and range increment updates efficiently.',
     mechanic: 'Use prefix sums and diff boundaries to batch range updates.',
-    timeComplexity: 'O(n + u + q)',
-    spaceComplexity: 'O(n)',
+    timeComplexity: TIME_CARD.ON,
+    spaceComplexity: SPACE_CARD.ON,
     invariant: 'Prefix and diff reconstruction remain index-consistent.',
     pitfall: 'Off-by-one at r+1 in difference array.',
     weakFit: 'You only need one query and no repeated ranges.',
@@ -144,8 +176,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   intervals: {
     scenario: 'Merge overlapping time/range blocks.',
     mechanic: 'Sort by start then sweep and merge overlaps.',
-    timeComplexity: 'O(n log n)',
-    spaceComplexity: 'O(n)',
+    timeComplexity: TIME_CARD.ONLOGN,
+    spaceComplexity: SPACE_CARD.ON,
     invariant: 'Merged list remains sorted and non-overlapping.',
     pitfall: 'Skipping initial sort before merge sweep.',
     weakFit: 'Data has no interval semantics to merge.',
@@ -154,8 +186,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   heap: {
     scenario: 'Maintain dynamic top-k values in stream.',
     mechanic: 'Push each value and pop smallest when size exceeds k.',
-    timeComplexity: 'O(n log k)',
-    spaceComplexity: 'O(k)',
+    timeComplexity: TIME_CARD.ONLOGN,
+    spaceComplexity: SPACE_CARD.ON,
     invariant: 'Heap root is current smallest among kept top-k candidates.',
     pitfall: 'Using wrong heap polarity (min vs max).',
     weakFit: 'Need full sorted order each step, not just best element(s).',
@@ -164,8 +196,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   monotonic_queue: {
     scenario: 'Compute sliding window maximum/minimum in linear time.',
     mechanic: 'Maintain deque indices in monotonic value order.',
-    timeComplexity: 'O(n)',
-    spaceComplexity: 'O(k)',
+    timeComplexity: TIME_CARD.ON,
+    spaceComplexity: SPACE_CARD.ON,
     invariant: 'Deque front is valid optimum index for current window.',
     pitfall: 'Not evicting indices that fall out of window.',
     weakFit: 'Query windows are random/non-sequential rather than sliding.',
@@ -174,8 +206,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   topological_sort: {
     scenario: 'Produce dependency-respecting order in a directed acyclic graph (DAG).',
     mechanic: 'Kahn process: pop zero-indegree and reduce outgoing indegrees.',
-    timeComplexity: 'O(V + E)',
-    spaceComplexity: 'O(V)',
+    timeComplexity: TIME_CARD.ON,
+    spaceComplexity: SPACE_CARD.OV,
     invariant: 'Only zero-indegree nodes are output next.',
     pitfall: 'Ignoring cycle when order length < node count.',
     weakFit: 'Graph is undirected or not dependency-oriented.',
@@ -184,8 +216,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   union_find: {
     scenario: 'Answer repeated connectivity queries as edges are added.',
     mechanic: 'Union component roots and find representative roots quickly.',
-    timeComplexity: 'O((V + E) * alpha(V))',
-    spaceComplexity: 'O(V)',
+    timeComplexity: TIME_CARD.ON,
+    spaceComplexity: SPACE_CARD.OV,
     invariant: 'Each node maps to a stable component root.',
     pitfall: 'Skipping path compression/rank heuristics.',
     weakFit: 'Need explicit shortest paths, not connectivity only.',
@@ -194,8 +226,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   backtracking: {
     scenario: 'Search combinatorial solution space with constraints.',
     mechanic: 'Choose, recurse, and undo; prune invalid branches.',
-    timeComplexity: 'O(branch^depth)',
-    spaceComplexity: 'O(depth)',
+    timeComplexity: TIME_CARD.ON2,
+    spaceComplexity: SPACE_CARD.ON,
     invariant: 'Current path is valid partial solution before deeper recursion.',
     pitfall: 'Forgetting to undo state when backtracking.',
     weakFit: 'Problem has direct greedy or DP structure with no tree search need.',
@@ -204,8 +236,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   trie: {
     scenario: 'Fast prefix lookup over dictionary of words.',
     mechanic: 'Traverse/create nodes per character from root to depth L.',
-    timeComplexity: 'O(L)',
-    spaceComplexity: 'O(total characters)',
+    timeComplexity: TIME_CARD.ON,
+    spaceComplexity: SPACE_CARD.ON,
     invariant: 'Each root-to-node path represents a stored prefix.',
     pitfall: 'Missing end-of-word marker for complete-word checks.',
     weakFit: 'Dataset is tiny and linear search is simpler/cheaper.',
@@ -214,8 +246,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   greedy: {
     scenario: 'Maximize non-overlapping interval selections quickly.',
     mechanic: 'Sort by earliest finish and accept compatible interval greedily.',
-    timeComplexity: 'O(n log n)',
-    spaceComplexity: 'O(1) to O(n)',
+    timeComplexity: TIME_CARD.ONLOGN,
+    spaceComplexity: SPACE_CARD.O1,
     invariant: 'Chosen set remains feasible after every selection.',
     pitfall: 'Choosing wrong sort criterion without proof.',
     weakFit: 'Local optimum does not imply global optimum.',
@@ -224,8 +256,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   dijkstra: {
     scenario: 'Find minimum distances from one source in weighted graph.',
     mechanic: 'Pop smallest tentative distance and relax outgoing edges.',
-    timeComplexity: 'O((V + E) log V)',
-    spaceComplexity: 'O(V)',
+    timeComplexity: TIME_CARD.ONLOGN,
+    spaceComplexity: SPACE_CARD.OV,
     invariant: 'Popped node with minimal tentative distance is finalized.',
     pitfall: 'Applying algorithm with negative edge weights.',
     weakFit: 'Graph contains negative-weight edges.',
@@ -323,6 +355,7 @@ function buildFollowUpQuestion(
   seed: number,
 ): QuizQuestion {
   const profile = profiles[patternKey];
+  const patternInfo = patternByKey[patternKey];
   const others = Object.entries(profiles)
     .filter(([k]) => k !== patternKey)
     .map(([, value]) => value);
@@ -341,16 +374,16 @@ function buildFollowUpQuestion(
       pool: others.map((x) => x.mechanic),
     },
     time_complexity: {
-      prompt: `Follow-up (${patternName}): choose the typical time complexity.`,
+      prompt: `Follow-up (${patternName}): choose the best matching time-complexity card.`,
       correct: profile.timeComplexity,
-      explanation: `Time complexity refresher: ${profile.timeComplexity}`,
-      pool: others.map((x) => x.timeComplexity),
+      explanation: `Card answer: ${profile.timeComplexity} | Exact pattern note: ${patternInfo.timeComplexity}`,
+      pool: TIME_COMPLEXITY_CARD_OPTIONS.filter((x) => x !== profile.timeComplexity),
     },
     space_complexity: {
-      prompt: `Follow-up (${patternName}): choose the typical space complexity.`,
+      prompt: `Follow-up (${patternName}): choose the best matching space-complexity card.`,
       correct: profile.spaceComplexity,
-      explanation: `Space complexity refresher: ${profile.spaceComplexity}`,
-      pool: others.map((x) => x.spaceComplexity),
+      explanation: `Card answer: ${profile.spaceComplexity} | Exact pattern note: ${patternInfo.spaceComplexity}`,
+      pool: SPACE_COMPLEXITY_CARD_OPTIONS.filter((x) => x !== profile.spaceComplexity),
     },
     invariant: {
       prompt: `Follow-up (${patternName}): which invariant must stay true?`,
@@ -487,6 +520,7 @@ export function StudyLabPage() {
 
   const [patternKey, setPatternKey] = useState<PatternKey>(initial.lastPattern);
   const [difficulty, setDifficulty] = useState<Difficulty>(initial.lastDifficulty);
+  const [optionOrderSeed, setOptionOrderSeed] = useState(() => Math.floor(Math.random() * 1_000_000));
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [checked, setChecked] = useState(false);
   const [showAnswers, setShowAnswers] = useState(false);
@@ -635,7 +669,7 @@ export function StudyLabPage() {
         id: 'scenario',
         category: 'scenario',
         prompt: 'Which task is the best fit?',
-        options: buildOptions(profile.scenario, others.map((x) => x.scenario), patternIndex + 11),
+        options: buildOptions(profile.scenario, others.map((x) => x.scenario), patternIndex + 11 + optionOrderSeed),
         correct: profile.scenario,
         explanation: `Use this pattern when: ${pattern.whenToUse}`,
       },
@@ -643,31 +677,39 @@ export function StudyLabPage() {
         id: 'mechanic',
         category: 'mechanic',
         prompt: 'What core process drives this pattern?',
-        options: buildOptions(profile.mechanic, others.map((x) => x.mechanic), patternIndex + 13),
+        options: buildOptions(profile.mechanic, others.map((x) => x.mechanic), patternIndex + 13 + optionOrderSeed),
         correct: profile.mechanic,
         explanation: `Core behavior: ${profile.mechanic}`,
       },
       {
         id: 'time_complexity',
         category: 'time_complexity',
-        prompt: 'Pick the most accurate typical time complexity.',
-        options: buildOptions(profile.timeComplexity, others.map((x) => x.timeComplexity), patternIndex + 17),
+        prompt: 'Pick the best matching Time card.',
+        options: buildOptions(
+          profile.timeComplexity,
+          TIME_COMPLEXITY_CARD_OPTIONS.filter((x) => x !== profile.timeComplexity),
+          patternIndex + 17 + optionOrderSeed,
+        ),
         correct: profile.timeComplexity,
-        explanation: `Time complexity: ${pattern.timeComplexity}.`,
+        explanation: `Card answer: ${profile.timeComplexity}. Exact pattern note: ${pattern.timeComplexity}.`,
       },
       {
         id: 'space_complexity',
         category: 'space_complexity',
-        prompt: 'Pick the most accurate typical space complexity.',
-        options: buildOptions(profile.spaceComplexity, others.map((x) => x.spaceComplexity), patternIndex + 18),
+        prompt: 'Pick the best matching Space card.',
+        options: buildOptions(
+          profile.spaceComplexity,
+          SPACE_COMPLEXITY_CARD_OPTIONS.filter((x) => x !== profile.spaceComplexity),
+          patternIndex + 18 + optionOrderSeed,
+        ),
         correct: profile.spaceComplexity,
-        explanation: `Space complexity: ${pattern.spaceComplexity}.`,
+        explanation: `Card answer: ${profile.spaceComplexity}. Exact pattern note: ${pattern.spaceComplexity}.`,
       },
       {
         id: 'invariant',
         category: 'invariant',
         prompt: 'Which invariant should stay true while running it?',
-        options: buildOptions(profile.invariant, others.map((x) => x.invariant), patternIndex + 19),
+        options: buildOptions(profile.invariant, others.map((x) => x.invariant), patternIndex + 19 + optionOrderSeed),
         correct: profile.invariant,
         explanation: `Invariant reminder: ${profile.invariant}`,
       },
@@ -675,7 +717,7 @@ export function StudyLabPage() {
         id: 'pitfall',
         category: 'pitfall',
         prompt: 'Which bug is most characteristic for this pattern?',
-        options: buildOptions(profile.pitfall, others.map((x) => x.pitfall), patternIndex + 23),
+        options: buildOptions(profile.pitfall, others.map((x) => x.pitfall), patternIndex + 23 + optionOrderSeed),
         correct: profile.pitfall,
         explanation: `Pitfall reminder: ${profile.pitfall}`,
       },
@@ -683,7 +725,7 @@ export function StudyLabPage() {
         id: 'weak_fit',
         category: 'weak_fit',
         prompt: 'When is this pattern usually a poor fit?',
-        options: buildOptions(profile.weakFit, others.map((x) => x.weakFit), patternIndex + 29),
+        options: buildOptions(profile.weakFit, others.map((x) => x.weakFit), patternIndex + 29 + optionOrderSeed),
         correct: profile.weakFit,
         explanation: `Use caution when: ${profile.weakFit}`,
       },
@@ -691,7 +733,7 @@ export function StudyLabPage() {
         id: 'edge_case',
         category: 'edge_case',
         prompt: 'Which edge case should you test first?',
-        options: buildOptions(profile.edgeCase, others.map((x) => x.edgeCase), patternIndex + 31),
+        options: buildOptions(profile.edgeCase, others.map((x) => x.edgeCase), patternIndex + 31 + optionOrderSeed),
         correct: profile.edgeCase,
         explanation: `Edge-case reminder: ${profile.edgeCase}`,
       },
@@ -700,7 +742,7 @@ export function StudyLabPage() {
     if (difficulty === 'easy') return all.slice(0, 5);
     if (difficulty === 'medium') return all.slice(0, 7);
     return all;
-  }, [difficulty, pattern, patternIndex, patternKey]);
+  }, [difficulty, optionOrderSeed, pattern, patternIndex, patternKey]);
 
   const followUpQuestion = useMemo(() => {
     if (!followUpCategory) return null;
@@ -708,6 +750,7 @@ export function StudyLabPage() {
   }, [followUpCategory, followUpSeed, pattern.name, patternKey]);
 
   useEffect(() => {
+    setOptionOrderSeed(Math.floor(Math.random() * 1_000_000));
     setAnswers({});
     setChecked(false);
     setShowAnswers(false);
@@ -993,6 +1036,7 @@ export function StudyLabPage() {
             className="btn"
             type="button"
             onClick={() => {
+              setOptionOrderSeed(Math.floor(Math.random() * 1_000_000));
               setAnswers({});
               setChecked(false);
               setShowAnswers(false);
