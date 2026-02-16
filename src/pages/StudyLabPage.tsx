@@ -5,7 +5,15 @@ import { PATTERNS, patternByKey, type PatternKey } from '../data/patterns';
 import { fetchStudy, isApiError, loginUser, registerUser, saveStudy, type StudySnapshot, type StudyUser } from '../lib/studyApi';
 
 type Difficulty = 'easy' | 'medium' | 'hard';
-type QuizCategory = 'scenario' | 'mechanic' | 'complexity' | 'invariant' | 'pitfall' | 'weak_fit' | 'edge_case';
+type QuizCategory =
+  | 'scenario'
+  | 'mechanic'
+  | 'time_complexity'
+  | 'space_complexity'
+  | 'invariant'
+  | 'pitfall'
+  | 'weak_fit'
+  | 'edge_case';
 
 interface QuizQuestion {
   id: string;
@@ -19,18 +27,25 @@ interface QuizQuestion {
 interface PatternQuizProfile {
   scenario: string;
   mechanic: string;
-  complexityPair: string;
+  timeComplexity: string;
+  spaceComplexity: string;
   invariant: string;
   pitfall: string;
   weakFit: string;
   edgeCase: string;
 }
 
+interface TermHelpItem {
+  term: string;
+  plain: string;
+}
+
 const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   hash_set: {
     scenario: 'Detect whether any value appears more than once in one pass.',
     mechanic: 'Track seen values in a uniqueness structure and stop on repeat.',
-    complexityPair: 'Time: O(n) average, Space: O(n)',
+    timeComplexity: 'O(n) average for full duplicate-check pass; O(1) average per set operation',
+    spaceComplexity: 'O(n) worst-case (or O(u) unique values)',
     invariant: 'All unique values seen so far are recorded.',
     pitfall: 'Assuming hash iteration is naturally sorted.',
     weakFit: 'You need sorted/range queries rather than membership checks.',
@@ -39,7 +54,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   hash_map: {
     scenario: 'Count occurrences for every distinct value.',
     mechanic: 'Update key -> count for each element as you scan.',
-    complexityPair: 'Time: O(n) average, Space: O(n)',
+    timeComplexity: 'O(n) average for full counting pass; O(1) average per map update/get',
+    spaceComplexity: 'O(n) worst-case (or O(k) distinct keys)',
     invariant: 'Stored count per key matches processed occurrences.',
     pitfall: 'Forgetting missing keys should start from zero.',
     weakFit: 'You only need yes/no membership with no payload per key.',
@@ -48,7 +64,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   two_pointers: {
     scenario: 'Find target pair efficiently in sorted array.',
     mechanic: 'Move left/right pointer based on sum comparison.',
-    complexityPair: 'Time: O(n), Space: O(1)',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(1)',
     invariant: 'Candidate interval shrinks monotonically.',
     pitfall: 'Applying directly on unsorted data.',
     weakFit: 'Data is unsorted and cannot be sorted/preprocessed.',
@@ -57,7 +74,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   sliding_window: {
     scenario: 'Optimize over contiguous subarrays under a validity rule.',
     mechanic: 'Expand right and shrink left while restoring validity.',
-    complexityPair: 'Time: O(n), Space: O(1) or O(k)',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(1) or O(k)',
     invariant: 'Window satisfies constraint after each shrink phase.',
     pitfall: 'Using positive-only shrinking logic with negatives.',
     weakFit: 'Problem needs non-contiguous selection rather than windows.',
@@ -66,7 +84,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   stack: {
     scenario: 'Validate nested structure ordering.',
     mechanic: 'Push open state and pop on matching close.',
-    complexityPair: 'Time: O(n), Space: O(n)',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(n)',
     invariant: 'Top of stack is latest unresolved opener/state.',
     pitfall: 'Not checking leftover stack items at end.',
     weakFit: 'Task requires random access updates, not LIFO order.',
@@ -75,7 +94,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   bfs: {
     scenario: 'Shortest path by edge count in unweighted graph.',
     mechanic: 'Process frontier level-by-level with FIFO queue.',
-    complexityPair: 'Time: O(V + E), Space: O(V)',
+    timeComplexity: 'O(V + E)',
+    spaceComplexity: 'O(V)',
     invariant: 'First visit gives minimum unweighted distance.',
     pitfall: 'Assuming BFS always visits fewer nodes than DFS for target checks.',
     weakFit: 'Edges have varying positive weights.',
@@ -84,7 +104,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   dfs: {
     scenario: 'Explore connected components deeply with backtracking.',
     mechanic: 'Recurse/stack deep before exploring siblings.',
-    complexityPair: 'Time: O(V + E), Space: O(V)',
+    timeComplexity: 'O(V + E)',
+    spaceComplexity: 'O(V)',
     invariant: 'Visited nodes are never re-entered.',
     pitfall: 'Assuming the first path found is shortest.',
     weakFit: 'Need guaranteed shortest unweighted path.',
@@ -93,7 +114,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   binary_search: {
     scenario: 'Locate boundary/index in sorted or monotonic space.',
     mechanic: 'Check midpoint and discard half each step.',
-    complexityPair: 'Time: O(log n), Space: O(1)',
+    timeComplexity: 'O(log n)',
+    spaceComplexity: 'O(1)',
     invariant: 'Answer stays inside [lo, hi).',
     pitfall: 'Applying binary search on unsorted/non-monotonic input.',
     weakFit: 'No ordering/monotonic property exists.',
@@ -102,7 +124,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   dp: {
     scenario: 'Solve overlapping subproblems with cached states.',
     mechanic: 'Define state/transition and compute each state once.',
-    complexityPair: 'Time: O(states * transitions), Space: O(states)',
+    timeComplexity: 'O(states * transitions)',
+    spaceComplexity: 'O(states)',
     invariant: 'Cached state values are reused, not recomputed.',
     pitfall: 'Wrong state definition or missing base case.',
     weakFit: 'Subproblems are independent with no overlap.',
@@ -111,7 +134,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   prefix_difference: {
     scenario: 'Answer many range sums and range increment updates efficiently.',
     mechanic: 'Use prefix sums and diff boundaries to batch range updates.',
-    complexityPair: 'Time: O(n + u + q), Space: O(n)',
+    timeComplexity: 'O(n + u + q)',
+    spaceComplexity: 'O(n)',
     invariant: 'Prefix and diff reconstruction remain index-consistent.',
     pitfall: 'Off-by-one at r+1 in difference array.',
     weakFit: 'You only need one query and no repeated ranges.',
@@ -120,7 +144,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   intervals: {
     scenario: 'Merge overlapping time/range blocks.',
     mechanic: 'Sort by start then sweep and merge overlaps.',
-    complexityPair: 'Time: O(n log n), Space: O(n)',
+    timeComplexity: 'O(n log n)',
+    spaceComplexity: 'O(n)',
     invariant: 'Merged list remains sorted and non-overlapping.',
     pitfall: 'Skipping initial sort before merge sweep.',
     weakFit: 'Data has no interval semantics to merge.',
@@ -129,7 +154,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   heap: {
     scenario: 'Maintain dynamic top-k values in stream.',
     mechanic: 'Push each value and pop smallest when size exceeds k.',
-    complexityPair: 'Time: O(n log k), Space: O(k)',
+    timeComplexity: 'O(n log k)',
+    spaceComplexity: 'O(k)',
     invariant: 'Heap root is current smallest among kept top-k candidates.',
     pitfall: 'Using wrong heap polarity (min vs max).',
     weakFit: 'Need full sorted order each step, not just best element(s).',
@@ -138,16 +164,18 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   monotonic_queue: {
     scenario: 'Compute sliding window maximum/minimum in linear time.',
     mechanic: 'Maintain deque indices in monotonic value order.',
-    complexityPair: 'Time: O(n), Space: O(k)',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(k)',
     invariant: 'Deque front is valid optimum index for current window.',
     pitfall: 'Not evicting indices that fall out of window.',
     weakFit: 'Query windows are random/non-sequential rather than sliding.',
     edgeCase: 'Window size k equals array length.',
   },
   topological_sort: {
-    scenario: 'Produce dependency-respecting order in DAG.',
+    scenario: 'Produce dependency-respecting order in a directed acyclic graph (DAG).',
     mechanic: 'Kahn process: pop zero-indegree and reduce outgoing indegrees.',
-    complexityPair: 'Time: O(V + E), Space: O(V)',
+    timeComplexity: 'O(V + E)',
+    spaceComplexity: 'O(V)',
     invariant: 'Only zero-indegree nodes are output next.',
     pitfall: 'Ignoring cycle when order length < node count.',
     weakFit: 'Graph is undirected or not dependency-oriented.',
@@ -156,7 +184,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   union_find: {
     scenario: 'Answer repeated connectivity queries as edges are added.',
     mechanic: 'Union component roots and find representative roots quickly.',
-    complexityPair: 'Time: O((V + E) * alpha(V)), Space: O(V)',
+    timeComplexity: 'O((V + E) * alpha(V))',
+    spaceComplexity: 'O(V)',
     invariant: 'Each node maps to a stable component root.',
     pitfall: 'Skipping path compression/rank heuristics.',
     weakFit: 'Need explicit shortest paths, not connectivity only.',
@@ -165,7 +194,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   backtracking: {
     scenario: 'Search combinatorial solution space with constraints.',
     mechanic: 'Choose, recurse, and undo; prune invalid branches.',
-    complexityPair: 'Time: O(branch^depth), Space: O(depth)',
+    timeComplexity: 'O(branch^depth)',
+    spaceComplexity: 'O(depth)',
     invariant: 'Current path is valid partial solution before deeper recursion.',
     pitfall: 'Forgetting to undo state when backtracking.',
     weakFit: 'Problem has direct greedy or DP structure with no tree search need.',
@@ -174,7 +204,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   trie: {
     scenario: 'Fast prefix lookup over dictionary of words.',
     mechanic: 'Traverse/create nodes per character from root to depth L.',
-    complexityPair: 'Time: O(L), Space: O(total characters)',
+    timeComplexity: 'O(L)',
+    spaceComplexity: 'O(total characters)',
     invariant: 'Each root-to-node path represents a stored prefix.',
     pitfall: 'Missing end-of-word marker for complete-word checks.',
     weakFit: 'Dataset is tiny and linear search is simpler/cheaper.',
@@ -183,7 +214,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   greedy: {
     scenario: 'Maximize non-overlapping interval selections quickly.',
     mechanic: 'Sort by earliest finish and accept compatible interval greedily.',
-    complexityPair: 'Time: O(n log n), Space: O(1) to O(n)',
+    timeComplexity: 'O(n log n)',
+    spaceComplexity: 'O(1) to O(n)',
     invariant: 'Chosen set remains feasible after every selection.',
     pitfall: 'Choosing wrong sort criterion without proof.',
     weakFit: 'Local optimum does not imply global optimum.',
@@ -192,7 +224,8 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   dijkstra: {
     scenario: 'Find minimum distances from one source in weighted graph.',
     mechanic: 'Pop smallest tentative distance and relax outgoing edges.',
-    complexityPair: 'Time: O((V + E) log V), Space: O(V)',
+    timeComplexity: 'O((V + E) log V)',
+    spaceComplexity: 'O(V)',
     invariant: 'Popped node with minimal tentative distance is finalized.',
     pitfall: 'Applying algorithm with negative edge weights.',
     weakFit: 'Graph contains negative-weight edges.',
@@ -200,7 +233,51 @@ const QUIZ_PROFILE: Record<PatternKey, PatternQuizProfile> = {
   },
 };
 
+const COMMON_TERM_HELP: TermHelpItem[] = [
+  { term: 'Invariant', plain: 'A rule that must stay true at every step of an algorithm.' },
+  { term: 'Edge Case', plain: 'A boundary input like empty data, one item, or extreme values.' },
+];
+
+const PATTERN_TERM_HELP: Partial<Record<PatternKey, TermHelpItem[]>> = {
+  bfs: [
+    { term: 'Unweighted Graph', plain: 'A graph where every edge has the same cost (or no weights).' },
+    { term: 'Frontier', plain: 'The current boundary of nodes to process next.' },
+  ],
+  dfs: [
+    { term: 'Backtracking', plain: 'Going deeper, then returning when a branch is finished.' },
+  ],
+  binary_search: [
+    { term: 'Monotonic', plain: 'A condition that moves in one direction (for example false...false...true...true).' },
+  ],
+  prefix_difference: [
+    { term: 'Prefix Sum', plain: 'Running total from start to current index.' },
+    { term: 'Difference Array', plain: 'Store range updates at boundaries, then rebuild the final values once.' },
+  ],
+  monotonic_queue: [
+    { term: 'Deque', plain: 'A double-ended queue where you can push/pop from both ends.' },
+  ],
+  topological_sort: [
+    { term: 'DAG', plain: 'Directed acyclic graph: arrows have direction and there are no cycles.' },
+    { term: 'Indegree', plain: 'How many incoming edges point into a node.' },
+  ],
+  union_find: [
+    { term: 'DSU', plain: 'Disjoint Set Union: a structure that tracks connected groups efficiently.' },
+    { term: 'alpha(V)', plain: 'A very slowly growing factor; in practice DSU operations are almost constant time.' },
+  ],
+  trie: [
+    { term: 'Trie', plain: 'A tree of characters used for fast prefix lookup.' },
+    { term: 'L', plain: 'The length of the word or prefix being searched.' },
+  ],
+  dijkstra: [
+    { term: 'Relax Edge', plain: 'Try improving a node distance using a newly found cheaper route.' },
+  ],
+};
+
 const DIFFICULTY_ORDER: Difficulty[] = ['easy', 'medium', 'hard'];
+
+function categoryToLabel(category: QuizCategory): string {
+  return category.replace(/_/g, ' ');
+}
 
 function buildOptions(correct: string, pool: string[], seed: number): string[] {
   const uniquePool = Array.from(new Set(pool.filter((x) => x !== correct)));
@@ -224,7 +301,7 @@ function gradeFromPercent(percent: number): string {
 }
 
 function weakestCategoryForPattern(stats: Record<string, number>, pattern: PatternKey): QuizCategory | null {
-  const categories: QuizCategory[] = ['scenario', 'mechanic', 'complexity', 'invariant', 'pitfall', 'weak_fit', 'edge_case'];
+  const categories: QuizCategory[] = ['scenario', 'mechanic', 'time_complexity', 'space_complexity', 'invariant', 'pitfall', 'weak_fit', 'edge_case'];
   let best: QuizCategory | null = null;
   let maxScore = -1;
   categories.forEach((category) => {
@@ -263,11 +340,17 @@ function buildFollowUpQuestion(
       explanation: `Mechanic refresher: ${profile.mechanic}`,
       pool: others.map((x) => x.mechanic),
     },
-    complexity: {
-      prompt: `Follow-up (${patternName}): pick the right complexity pair.`,
-      correct: profile.complexityPair,
-      explanation: `Complexity refresher: ${profile.complexityPair}`,
-      pool: others.map((x) => x.complexityPair),
+    time_complexity: {
+      prompt: `Follow-up (${patternName}): choose the typical time complexity.`,
+      correct: profile.timeComplexity,
+      explanation: `Time complexity refresher: ${profile.timeComplexity}`,
+      pool: others.map((x) => x.timeComplexity),
+    },
+    space_complexity: {
+      prompt: `Follow-up (${patternName}): choose the typical space complexity.`,
+      correct: profile.spaceComplexity,
+      explanation: `Space complexity refresher: ${profile.spaceComplexity}`,
+      pool: others.map((x) => x.spaceComplexity),
     },
     invariant: {
       prompt: `Follow-up (${patternName}): which invariant must stay true?`,
@@ -406,6 +489,7 @@ export function StudyLabPage() {
   const [difficulty, setDifficulty] = useState<Difficulty>(initial.lastDifficulty);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [checked, setChecked] = useState(false);
+  const [showAnswers, setShowAnswers] = useState(false);
   const [followUpCategory, setFollowUpCategory] = useState<QuizCategory | null>(null);
   const [followUpAnswer, setFollowUpAnswer] = useState('');
   const [followUpChecked, setFollowUpChecked] = useState(false);
@@ -489,12 +573,22 @@ export function StudyLabPage() {
       })
       .catch((error: unknown) => {
         if (!active) return;
-        const message = isApiError(error) ? error.message : 'Failed to load saved study data.';
-        setSyncState('error');
-        setSyncError(message);
+
         if (isApiError(error) && error.status === 401) {
           clearAuth('Session expired. Please sign in again.');
+          return;
         }
+
+        if (isApiError(error) && error.status === 404) {
+          setReadyToSync(true);
+          setSyncState('idle');
+          setSyncError('');
+          setAuthInfo('No previous study data found. Starting fresh.');
+          return;
+        }
+
+        setSyncState('error');
+        setSyncError('Failed to sync study data.');
       })
       .finally(() => {
         if (!active) return;
@@ -519,9 +613,8 @@ export function StudyLabPage() {
           setSyncError('');
         })
         .catch((error: unknown) => {
-          const message = isApiError(error) ? error.message : 'Failed to sync study data.';
           setSyncState('error');
-          setSyncError(message);
+          setSyncError('Failed to sync study data.');
           if (isApiError(error) && error.status === 401) {
             clearAuth('Session expired. Please sign in again.');
           }
@@ -555,12 +648,20 @@ export function StudyLabPage() {
         explanation: `Core behavior: ${profile.mechanic}`,
       },
       {
-        id: 'complexity',
-        category: 'complexity',
-        prompt: 'Pick the most accurate typical complexity pair.',
-        options: buildOptions(profile.complexityPair, others.map((x) => x.complexityPair), patternIndex + 17),
-        correct: profile.complexityPair,
-        explanation: `${pattern.timeComplexity}; ${pattern.spaceComplexity}.`,
+        id: 'time_complexity',
+        category: 'time_complexity',
+        prompt: 'Pick the most accurate typical time complexity.',
+        options: buildOptions(profile.timeComplexity, others.map((x) => x.timeComplexity), patternIndex + 17),
+        correct: profile.timeComplexity,
+        explanation: `Time complexity: ${pattern.timeComplexity}.`,
+      },
+      {
+        id: 'space_complexity',
+        category: 'space_complexity',
+        prompt: 'Pick the most accurate typical space complexity.',
+        options: buildOptions(profile.spaceComplexity, others.map((x) => x.spaceComplexity), patternIndex + 18),
+        correct: profile.spaceComplexity,
+        explanation: `Space complexity: ${pattern.spaceComplexity}.`,
       },
       {
         id: 'invariant',
@@ -596,8 +697,8 @@ export function StudyLabPage() {
       },
     ];
 
-    if (difficulty === 'easy') return all.slice(0, 4);
-    if (difficulty === 'medium') return all.slice(0, 6);
+    if (difficulty === 'easy') return all.slice(0, 5);
+    if (difficulty === 'medium') return all.slice(0, 7);
     return all;
   }, [difficulty, pattern, patternIndex, patternKey]);
 
@@ -609,6 +710,7 @@ export function StudyLabPage() {
   useEffect(() => {
     setAnswers({});
     setChecked(false);
+    setShowAnswers(false);
     setFollowUpCategory(null);
     setFollowUpAnswer('');
     setFollowUpChecked(false);
@@ -620,11 +722,13 @@ export function StudyLabPage() {
   const grade = gradeFromPercent(percent);
 
   const weakAreaRows = useMemo(() => {
-    const categories: QuizCategory[] = ['scenario', 'mechanic', 'complexity', 'invariant', 'pitfall', 'weak_fit', 'edge_case'];
+    const categories: QuizCategory[] = ['scenario', 'mechanic', 'time_complexity', 'space_complexity', 'invariant', 'pitfall', 'weak_fit', 'edge_case'];
     return categories
       .map((c) => ({ category: c, misses: weakStats[`${patternKey}:${c}`] ?? 0 }))
       .sort((a, b) => b.misses - a.misses);
   }, [patternKey, weakStats]);
+
+  const termHelpRows = useMemo(() => [...COMMON_TERM_HELP, ...(PATTERN_TERM_HELP[patternKey] ?? [])], [patternKey]);
 
   const cumulativeAccuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
 
@@ -776,7 +880,7 @@ export function StudyLabPage() {
             <p className="muted">Progress sync status: {syncLabel}</p>
             {authError && <p className="quiz-feedback bad">{authError}</p>}
             {authInfo && <p className="quiz-feedback ok">{authInfo}</p>}
-            {syncError && <p className="quiz-feedback bad">{syncError}</p>}
+            {Boolean(token) && syncError && <p className="quiz-feedback bad">{syncError}</p>}
           </form>
         )}
 
@@ -800,30 +904,13 @@ export function StudyLabPage() {
         )}
       </section>
 
-      <section className="panel">
-        <div className="panel-head">
-          <h3>Pattern Focus</h3>
-          <PatternPicker value={patternKey} onChange={setPatternKey} />
-        </div>
-
-        <p><strong>What it does:</strong> {pattern.whatItDoes}</p>
-        <p><strong>When to use:</strong> {pattern.whenToUse}</p>
-        <p><strong>Time:</strong> {pattern.timeComplexity}</p>
-        <p><strong>Space:</strong> {pattern.spaceComplexity}</p>
-        <p><strong>Interview phrasing:</strong> {pattern.englishLine}</p>
-
-        <article className="card">
-          <h4>Pattern Core</h4>
-          <p><strong>Invariant:</strong> {pattern.invariant}</p>
-          <p><strong>Pitfalls:</strong> {pattern.pitfalls.join(', ')}</p>
-          <p><strong>Edge cases:</strong> {pattern.edgeCases.join(', ')}</p>
-        </article>
-      </section>
-
       <section className="panel panel-spacious study-quiz-panel">
         <div className="panel-head study-quiz-head">
           <h3>Interactive Quiz</h3>
-          <span className="quiz-pattern-tag">Pattern: {pattern.name}</span>
+          <div className="quiz-pattern-control">
+            <span className="quiz-pattern-tag">Pattern:</span>
+            <PatternPicker value={patternKey} onChange={setPatternKey} />
+          </div>
         </div>
 
         <div className="row gap-sm study-difficulty-row">
@@ -837,26 +924,42 @@ export function StudyLabPage() {
               {d[0]?.toUpperCase() + d.slice(1)}
             </button>
           ))}
+          <button className={`btn ${showAnswers ? 'primary' : ''}`} type="button" onClick={() => setShowAnswers((prev) => !prev)}>
+            {showAnswers ? 'Hide Answers' : 'Show Answers'}
+          </button>
         </div>
 
         <p className="muted quiz-progress">
           Difficulty: <strong>{difficulty}</strong> | Answered {answeredCount}/{questions.length} | Lifetime attempts: {quizAttempts} | Cumulative accuracy: {cumulativeAccuracy}%.
         </p>
 
+        <article className="card">
+          <h4>Term Help (Plain English)</h4>
+          <div className="glossary-grid">
+            {termHelpRows.map((row) => (
+              <div key={row.term} className="card glossary-card">
+                <h4>{row.term}</h4>
+                <p>{row.plain}</p>
+              </div>
+            ))}
+          </div>
+        </article>
+
         {questions.map((question, idx) => {
           const selected = answers[question.id] ?? '';
           const isCorrect = selected === question.correct;
+          const showCorrectOutlines = checked || showAnswers;
           return (
             <article key={question.id} className="card quiz-question-card">
               <h4 className="quiz-question-title">{idx + 1}) {question.prompt}</h4>
-              <p className="muted quiz-question-meta">Category: {question.category.replace('_', ' ')}</p>
+              <p className="muted quiz-question-meta">Category: {categoryToLabel(question.category)}</p>
               <div className="quiz-option-grid" role="radiogroup" aria-label={question.prompt}>
                 {question.options.map((option) => {
                   const selectedClass = selected === option ? 'selected' : '';
                   const gradedClass =
-                    checked && option === question.correct
+                    showCorrectOutlines && option === question.correct
                       ? 'correct'
-                      : checked && selected === option && option !== question.correct
+                    : checked && selected === option && option !== question.correct
                         ? 'wrong'
                         : '';
                   return (
@@ -892,6 +995,7 @@ export function StudyLabPage() {
             onClick={() => {
               setAnswers({});
               setChecked(false);
+              setShowAnswers(false);
               setFollowUpCategory(null);
               setFollowUpAnswer('');
               setFollowUpChecked(false);
@@ -920,7 +1024,7 @@ export function StudyLabPage() {
           <ul>
             {weakAreaRows.map((row) => (
               <li key={row.category}>
-                <strong>{row.category.replace('_', ' ')}</strong>: {row.misses}
+                <strong>{categoryToLabel(row.category)}</strong>: {row.misses}
               </li>
             ))}
           </ul>
@@ -928,13 +1032,14 @@ export function StudyLabPage() {
 
         {checked && followUpQuestion && (
           <article className="card study-followup-card">
-            <h4>Targeted Follow-up: {followUpQuestion.category.replace('_', ' ')}</h4>
+            <h4>Targeted Follow-up: {categoryToLabel(followUpQuestion.category)}</h4>
             <p className="quiz-followup-prompt">{followUpQuestion.prompt}</p>
             <div className="quiz-option-grid" role="radiogroup" aria-label="Targeted Follow-up">
               {followUpQuestion.options.map((option) => {
                 const selectedClass = followUpAnswer === option ? 'selected' : '';
+                const showFollowUpCorrectOutlines = followUpChecked || showAnswers;
                 const gradedClass =
-                  followUpChecked && option === followUpQuestion.correct
+                  showFollowUpCorrectOutlines && option === followUpQuestion.correct
                     ? 'correct'
                     : followUpChecked && followUpAnswer === option && option !== followUpQuestion.correct
                       ? 'wrong'
