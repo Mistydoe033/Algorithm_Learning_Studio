@@ -1,6 +1,6 @@
 # Algorithm Learning Studio (React)
 
-Frontend-only learning app for algorithm patterns and complexity practice.
+Learning app for algorithm patterns and complexity practice, with a local API for auth + study progress sync.
 
 ## Pages
 
@@ -12,7 +12,8 @@ Frontend-only learning app for algorithm patterns and complexity practice.
 
 - React + TypeScript + Vite
 - React Router for page navigation
-- Local algorithm simulation logic (no API)
+- Express + Postgres API for account auth and study progress persistence
+- Local algorithm simulation logic
 
 ## Run
 
@@ -23,6 +24,23 @@ npm run dev
 ```
 
 Open the local URL from Vite (usually `http://localhost:5173`).
+
+## API Notes
+
+- API server runs on `http://localhost:8787` in local dev (`npm run dev` starts both app + API).
+- Frontend defaults to same-origin `/api` in production so it can be deployed together with API routes.
+- Optional override: set `VITE_API_BASE_URL` only if your API is on a different host.
+
+## Single Deploy (Frontend + API together)
+
+- This repo includes serverless API handlers under `api/`:
+  - `api/auth/login`
+  - `api/auth/register`
+  - `api/study`
+  - `api/health`
+- Set backend env vars on your deploy project:
+  - `DATABASE_URL`
+  - `JWT_SECRET`
 
 ## Build
 

@@ -31,8 +31,17 @@ class ApiError extends Error {
   }
 }
 
+const apiBaseRaw = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() ?? '';
+// Default to same-origin so frontend + API can live in one deploy.
+const API_BASE = apiBaseRaw;
+
+function buildApiUrl(path: string): string {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE}${normalizedPath}`;
+}
+
 async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(path, {
+  const response = await fetch(buildApiUrl(path), {
     ...init,
     headers: {
       'Content-Type': 'application/json',
@@ -41,7 +50,14 @@ async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> 
   });
 
   const text = await response.text();
-  const data = text ? (JSON.parse(text) as Record<string, unknown>) : {};
+  let data: Record<string, unknown> = {};
+  if (text) {
+    try {
+      data = JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      data = { error: text };
+    }
+  }
 
   if (!response.ok) {
     const errorMessage = typeof data.error === 'string' ? data.error : `Request failed with status ${response.status}`;
