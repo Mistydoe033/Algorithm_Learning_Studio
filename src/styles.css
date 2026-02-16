@@ -365,6 +365,7 @@ ul {
   justify-content: end;
   gap: 6px;
   font-size: 0.8rem;
+  height: 100%;
 }
 
 .bars-col {
@@ -372,6 +373,11 @@ ul {
   min-height: 2px;
   border-radius: 8px 8px 2px 2px;
   background: var(--purple-soft);
+}
+
+.bars-value {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--green);
 }
 
 @keyframes lift-in {
