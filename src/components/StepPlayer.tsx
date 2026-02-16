@@ -44,7 +44,7 @@ export function StepPlayer({ pattern, steps, renderVisual }: StepPlayerProps) {
   if (!step) return <p className="muted">No steps available.</p>;
 
   return (
-    <section className="panel">
+    <section className="panel panel-spacious step-player-panel">
       <div className="panel-head">
         <h3>Step Player</h3>
         <div className="row gap-sm">

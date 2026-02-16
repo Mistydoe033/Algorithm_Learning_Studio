@@ -1,5 +1,6 @@
 export type PatternKey =
-  | 'hash_lookup'
+  | 'hash_set'
+  | 'hash_map'
   | 'two_pointers'
   | 'sliding_window'
   | 'stack'
@@ -23,15 +24,33 @@ export interface PatternInfo {
 
 export const PATTERNS: PatternInfo[] = [
   {
-    key: 'hash_lookup',
-    name: 'HashMap / HashSet',
-    whatItDoes: 'Fast lookup for duplicates and counting.',
-    whenToUse: 'Seen-before checks, frequency counts, grouping.',
-    timeComplexity: 'O(n) average, O(n^2) worst-case',
-    spaceComplexity: 'O(n)',
-    englishLine: 'Average O(n) because each lookup/insert is O(1) on average; O(n) space for stored keys.',
-    invariant: "Set/map contains what we have seen so far.",
-    pitfalls: ['Assuming hash maps preserve order', 'Forgetting worst-case mention', 'Unnecessary cloning'],
+    key: 'hash_set',
+    name: 'HashSet',
+    whatItDoes: 'Stores unique values for fast membership and duplicate checks.',
+    whenToUse: 'Seen-before checks, deduplication, quick existence tests.',
+    timeComplexity:
+      'Single set op (insert/contains/remove): O(1) average, O(n) worst-case. Duplicate-check pass over n items: O(n) average.',
+    spaceComplexity: 'O(u) where u = number of unique values (worst-case O(n))',
+    englishLine: 'HashSet duplicate check is O(n) average for n items, with O(1) average membership checks per step.',
+    invariant: 'Set contains unique values seen so far.',
+    pitfalls: ['Assuming hash structures are naturally sorted', 'Forgetting worst-case hash behavior', 'Unnecessary cloning'],
+    edgeCases: ['Empty input', 'All unique', 'All duplicates'],
+  },
+  {
+    key: 'hash_map',
+    name: 'HashMap',
+    whatItDoes: 'Stores key-value pairs for counting, grouping, and keyed lookup.',
+    whenToUse: 'Frequency counting, aggregations, grouping by key.',
+    timeComplexity:
+      'Single map op (get/set/update): O(1) average, O(n) worst-case. Frequency/grouping pass over n items: O(n) average.',
+    spaceComplexity: 'O(k) where k = number of distinct keys (worst-case O(n))',
+    englishLine: 'HashMap counting/grouping is O(n) average for n items, with O(1) average updates per key.',
+    invariant: 'Map stores key->value entries (example: value->count).',
+    pitfalls: [
+      'Assuming hash structures are naturally sorted',
+      'Forgetting worst-case hash behavior',
+      'Unnecessary cloning',
+    ],
     edgeCases: ['Empty input', 'All unique', 'All duplicates'],
   },
   {
@@ -79,7 +98,7 @@ export const PATTERNS: PatternInfo[] = [
     spaceComplexity: 'O(V)',
     englishLine: 'O(V+E) because each node and edge is processed at most once.',
     invariant: 'Queue contains frontier for the next levels.',
-    pitfalls: ['Marking visited too late', 'Using array shift for queue', 'Missing bounds checks'],
+    pitfalls: ['Marking visited too late', 'Using a non-constant-time dequeue operation', 'Missing bounds checks'],
     edgeCases: ['Empty graph/grid', 'Blocked start', 'Disconnected sections'],
   },
   {

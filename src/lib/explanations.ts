@@ -14,10 +14,11 @@ export function changedFields(prev: Step | null, current: Step): string[] {
 export function explainSimple(key: PatternKey, step: Step): { what: string; why: string } {
   const action = String(step.action ?? '');
   switch (key) {
-    case 'hash_lookup':
+    case 'hash_set':
       if (action.includes('duplicate')) return { what: 'Found a repeated value.', why: 'Repeat means duplicate exists, so we can stop.' };
-      if (action.includes('frequency')) return { what: 'Increased a count in the map.', why: 'Map keeps count for each value.' };
       return { what: 'Saved this value in the set.', why: 'So we can check future repeats quickly.' };
+    case 'hash_map':
+      return { what: 'Updated this value count in the map.', why: 'Map stores each key with its running frequency.' };
     case 'two_pointers':
       return { what: 'Compared left and right values.', why: 'Sorted order tells which pointer to move.' };
     case 'sliding_window':

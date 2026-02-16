@@ -25,7 +25,7 @@ export function BenchmarkPanel({ pattern }: Props) {
   const rows = useMemo(() => runBenchmark(pattern, repeats), [pattern, repeats, nonce]);
 
   return (
-    <section className="panel">
+    <section className="panel panel-spacious benchmark-panel">
       <div className="panel-head">
         <h3>Measured Complexity (Local)</h3>
         <div className="row gap-sm">

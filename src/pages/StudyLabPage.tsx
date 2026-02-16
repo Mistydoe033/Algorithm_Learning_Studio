@@ -1,11 +1,10 @@
 import { useState } from 'react';
 
-import { ComplexityPlayground } from '../components/ComplexityPlayground';
 import { PATTERNS, patternByKey, type PatternKey } from '../data/patterns';
 import { SPACE_CORRECT, TIME_CORRECT, USE_CASE_CORRECT } from '../lib/studyData';
 
 export function StudyLabPage() {
-  const [patternKey, setPatternKey] = useState<PatternKey>('hash_lookup');
+  const [patternKey, setPatternKey] = useState<PatternKey>('hash_set');
   const [q1, setQ1] = useState('');
   const [q2, setQ2] = useState('');
   const [q3, setQ3] = useState('');
@@ -66,7 +65,7 @@ export function StudyLabPage() {
         </article>
       </section>
 
-      <section className="panel">
+      <section className="panel panel-spacious study-quiz-panel">
         <h3>Interactive Quiz</h3>
         <label className="field">
           1) Best use case
@@ -119,7 +118,7 @@ export function StudyLabPage() {
           </select>
         </label>
 
-        <div className="row gap-sm">
+        <div className="row gap-sm study-quiz-actions">
           <button className="btn primary" type="button" onClick={() => setChecked(true)}>
             Check Answers
           </button>
@@ -147,10 +146,6 @@ export function StudyLabPage() {
             <p>Q4 correct: {String(q4 === pattern.invariant)}</p>
           </article>
         )}
-      </section>
-
-      <section className="panel">
-        <ComplexityPlayground />
       </section>
     </div>
   );

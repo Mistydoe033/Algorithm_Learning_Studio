@@ -112,11 +112,51 @@ nav {
   box-shadow: var(--shadow);
 }
 
+.pattern-visualizer-page {
+  gap: 24px;
+}
+
+.panel-spacious {
+  padding: 22px;
+}
+
+.panel-spacious > * + * {
+  margin-top: 14px;
+}
+
+.panel-spacious .panel-head {
+  margin-bottom: 6px;
+}
+
+.study-quiz-panel .row.gap-sm {
+  margin-top: 4px;
+}
+
+.study-quiz-actions {
+  margin-top: 10px;
+  padding-top: 4px;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.study-quiz-actions .btn {
+  padding: 10px 16px;
+}
+
+.study-quiz-panel .card {
+  margin-top: 6px;
+}
+
 .panel-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.quick-ref-head {
+  flex-wrap: wrap;
+  margin-bottom: 12px;
 }
 
 .card {
@@ -135,6 +175,13 @@ nav {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.drill-surface {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  background: rgba(17, 27, 49, 0.45);
 }
 
 .drill-card h4 {
@@ -208,6 +255,11 @@ nav {
   grid-column: 1 / -1;
 }
 
+.n-input {
+  max-width: 220px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
 input,
 select,
 button {
@@ -247,6 +299,50 @@ button:focus {
 
 .gap-sm {
   gap: 8px;
+}
+
+.scale-controls {
+  margin: 12px 0 16px;
+  flex-wrap: wrap;
+}
+
+.playground-help-head {
+  margin: 10px 0;
+  flex-wrap: wrap;
+}
+
+.playground-root {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.playground-title {
+  margin: 0;
+}
+
+.playground-graph {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(17, 27, 49, 0.55);
+}
+
+.playground-graph h4 {
+  margin: 0 0 8px;
+}
+
+.playground-section {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.playground-section h4 {
+  margin: 0 0 8px;
+}
+
+.drill-grid {
+  gap: 14px;
 }
 
 .btn {

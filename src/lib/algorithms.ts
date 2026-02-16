@@ -187,18 +187,20 @@ export function simulateBfsGrid(input: GridInput): SimulationResult {
   if (blocked.has(startKey)) return { steps: [{ step: 0, action: 'start blocked' }], result: 0 };
 
   const queue: Array<[number, number]> = [start];
+  let head = 0;
   const visited = new Set<string>([startKey]);
   const dirs: Array<[number, number]> = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
-  while (queue.length > 0) {
-    const [r, c] = queue.shift() as [number, number];
+  while (head < queue.length) {
+    const [r, c] = queue[head] as [number, number];
+    head += 1;
     steps.push({
       step: steps.length,
       node: [r, c],
       action: 'dequeue',
-      queueSize: queue.length,
+      queueSize: queue.length - head,
       visited: [...visited],
-      frontier: queue.map((x) => keyCell(x[0], x[1])),
+      frontier: queue.slice(head).map((x) => keyCell(x[0], x[1])),
     });
 
     dirs.forEach(([dr, dc]) => {
@@ -215,9 +217,9 @@ export function simulateBfsGrid(input: GridInput): SimulationResult {
         step: steps.length,
         node: [nr, nc],
         action: 'enqueue neighbor',
-        queueSize: queue.length,
+        queueSize: queue.length - head,
         visited: [...visited],
-        frontier: queue.map((x) => keyCell(x[0], x[1])),
+        frontier: queue.slice(head).map((x) => keyCell(x[0], x[1])),
       });
     });
   }
@@ -315,12 +317,19 @@ export function simulateFibMemo(n: number): SimulationResult {
 
 // Fast runners for benchmark mode
 export const benchmarkRunners: Record<PatternKey, (n: number) => void> = {
-  hash_lookup: (n) => {
+  hash_set: (n) => {
     const nums = [...Array(n).keys(), Math.floor(n / 2)];
     const seen = new Set<number>();
     for (const x of nums) {
       if (seen.has(x)) break;
       seen.add(x);
+    }
+  },
+  hash_map: (n) => {
+    const nums = [...Array(n).keys(), ...Array(n).keys()];
+    const freq = new Map<number, number>();
+    for (const x of nums) {
+      freq.set(x, (freq.get(x) ?? 0) + 1);
     }
   },
   two_pointers: (n) => {
@@ -361,11 +370,13 @@ export const benchmarkRunners: Record<PatternKey, (n: number) => void> = {
     const rows = side;
     const cols = side;
     const queue: Array<[number, number]> = [[0, 0]];
+    let head = 0;
     const seen = new Set<string>(['0,0']);
     const dirs: Array<[number, number]> = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
-    while (queue.length > 0) {
-      const [r, c] = queue.shift() as [number, number];
+    while (head < queue.length) {
+      const [r, c] = queue[head] as [number, number];
+      head += 1;
       for (const [dr, dc] of dirs) {
         const nr = r + dr;
         const nc = c + dc;
@@ -421,7 +432,8 @@ export const benchmarkRunners: Record<PatternKey, (n: number) => void> = {
 };
 
 export const defaultSizes: Record<PatternKey, number[]> = {
-  hash_lookup: [10, 100, 500, 1000, 2000, 5000],
+  hash_set: [10, 100, 500, 1000, 2000, 5000],
+  hash_map: [10, 100, 500, 1000, 2000, 5000],
   two_pointers: [10, 100, 500, 1000, 2000, 5000, 10000],
   sliding_window: [10, 100, 500, 1000, 2000, 5000, 10000],
   stack: [10, 100, 500, 1000, 2000, 5000, 10000],

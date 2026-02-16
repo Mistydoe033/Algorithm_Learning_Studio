@@ -28,7 +28,7 @@ function ComplexityDrill({ title, cards, prefix }: { title: string; cards: Card[
   }, [notation]);
 
   return (
-    <article className="card drill-card">
+    <article className="drill-card drill-surface">
       <h4>{title}</h4>
       <label className="field">
         Pick notation
@@ -128,7 +128,7 @@ export function ComplexityTrainerPage() {
       </section>
 
       <section className="panel">
-        <div className="panel-head">
+        <div className="panel-head quick-ref-head">
           <h3>Quick Reference</h3>
           <button className="btn" type="button" onClick={() => setShowReference((prev) => !prev)}>
             {showReference ? 'Hide Quick Reference' : 'Show Quick Reference'}
@@ -164,7 +164,7 @@ export function ComplexityTrainerPage() {
       </section>
 
       <section className="panel">
-        <div className="two-col">
+        <div className="two-col drill-grid">
           <ComplexityDrill title="Time Drill" cards={TIME_COMPLEXITY_CARDS} prefix="time" />
           <ComplexityDrill title="Space Drill" cards={SPACE_COMPLEXITY_CARDS} prefix="space" />
         </div>

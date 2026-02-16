@@ -1,7 +1,8 @@
 import type { PatternKey } from '../data/patterns';
 
 export const USE_CASE_CORRECT: Record<PatternKey, string> = {
-  hash_lookup: 'Fast duplicate checks and counting seen items.',
+  hash_set: 'Use HashSet for duplicate checks and fast membership tests.',
+  hash_map: 'Use HashMap for counting/grouping by key (key-value lookups).',
   two_pointers: 'Sorted arrays where two moving indices solve pair/interval problems.',
   sliding_window: 'Contiguous subarray/substring constraints with moving boundaries.',
   stack: 'Nested structure validation and monotonic processing.',
@@ -12,7 +13,8 @@ export const USE_CASE_CORRECT: Record<PatternKey, string> = {
 };
 
 export const TIME_CORRECT: Record<PatternKey, string> = {
-  hash_lookup: 'O(n) average',
+  hash_set: 'O(n) average',
+  hash_map: 'O(n) average',
   two_pointers: 'O(n)',
   sliding_window: 'O(n)',
   stack: 'O(n)',
@@ -23,7 +25,8 @@ export const TIME_CORRECT: Record<PatternKey, string> = {
 };
 
 export const SPACE_CORRECT: Record<PatternKey, string> = {
-  hash_lookup: 'O(n)',
+  hash_set: 'O(n)',
+  hash_map: 'O(n)',
   two_pointers: 'O(1)',
   sliding_window: 'O(1) or O(k)',
   stack: 'O(n)',

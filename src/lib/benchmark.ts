@@ -9,7 +9,8 @@ export interface BenchmarkRow {
 
 function estimateSpace(pattern: PatternKey, n: number): number {
   switch (pattern) {
-    case 'hash_lookup':
+    case 'hash_set':
+    case 'hash_map':
       return n;
     case 'two_pointers':
       return 1;
