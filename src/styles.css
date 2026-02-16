@@ -131,6 +131,55 @@ nav {
   margin-top: 0;
 }
 
+.drill-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.drill-card h4 {
+  margin-bottom: 4px;
+}
+
+.drill-card .field {
+  gap: 8px;
+}
+
+.drill-card p {
+  margin: 2px 0;
+  line-height: 1.45;
+}
+
+.drill-actions {
+  margin-top: 4px;
+}
+
+.drill-score {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.glossary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.glossary-card {
+  padding: 12px;
+}
+
+.glossary-card h4 {
+  margin: 0 0 6px;
+  color: var(--green);
+}
+
+.glossary-card p {
+  margin: 0;
+  line-height: 1.4;
+}
+
 .two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -347,6 +396,7 @@ ul {
   }
 
   .two-col,
+  .glossary-grid,
   .form-grid,
   .form-grid.triple {
     grid-template-columns: 1fr;

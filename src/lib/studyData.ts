@@ -55,7 +55,7 @@ export const TIME_COMPLEXITY_CARDS: Array<{ notation: string; name: string; plai
   {
     notation: 'O(n log n)',
     name: 'Linearithmic time',
-    plain: 'A bit more than linear, often sorting.',
+    plain: 'You process n items, and each one takes about log n work.',
     deeper: 'Typical of divide-and-conquer sorts like mergesort.',
   },
   {
@@ -70,31 +70,45 @@ export const SPACE_COMPLEXITY_CARDS: Array<{ notation: string; name: string; pla
   {
     notation: 'O(1)',
     name: 'Constant extra space',
-    plain: 'Uses only a few extra variables.',
+    plain: 'The extra memory stays about the same as input grows.',
     deeper: 'Auxiliary memory does not grow with input size.',
   },
   {
     notation: 'O(log n)',
     name: 'Logarithmic extra space',
-    plain: 'Extra memory grows slowly with n.',
+    plain: 'Extra memory grows slowly; doubling input adds only a little more.',
     deeper: 'Often recursion stack in balanced divide-and-conquer.',
   },
   {
     notation: 'O(n)',
     name: 'Linear extra space',
-    plain: 'Stores roughly one extra value per input item.',
+    plain: 'Extra memory grows in direct proportion to input size.',
     deeper: 'Examples: visited arrays, hash sets, output buffers.',
   },
   {
     notation: 'O(V)',
     name: 'Graph-linear extra space',
-    plain: 'Memory grows with number of vertices.',
+    plain: 'For graphs, extra memory grows with the number of vertices.',
     deeper: 'Typical for graph visited sets and traversal queues/stacks.',
   },
   {
     notation: 'O(states)',
     name: 'State-based extra space',
-    plain: 'Memory grows with number of DP states.',
+    plain: 'For DP, extra memory grows with how many states you store.',
     deeper: 'Memo/DP table stores each subproblem state once.',
   },
+];
+
+export const COMPLEXITY_TERMS: Array<{ term: string; meaning: string }> = [
+  { term: 'DP', meaning: 'Dynamic Programming. Break a problem into smaller subproblems and store answers.' },
+  { term: 'state', meaning: 'A unique subproblem configuration in DP (example: index, remaining sum).' },
+  { term: 'transition', meaning: 'How you move from one state to next states (the recurrence choices).' },
+  { term: 'O(states)', meaning: 'Memory grows with number of stored DP states.' },
+  { term: 'O(states * transitions)', meaning: 'Time is number of states times work done per state.' },
+  { term: 'V', meaning: 'Number of vertices (nodes) in a graph.' },
+  { term: 'E', meaning: 'Number of edges (connections) in a graph.' },
+  { term: 'O(V + E)', meaning: 'You process each node and edge about once.' },
+  { term: 'auxiliary space', meaning: 'Extra memory used by algorithm, not counting the original input.' },
+  { term: 'n', meaning: 'Input size (usually number of elements).' },
+  { term: 'log n', meaning: 'How many times you can halve n until you reach 1.' },
 ];

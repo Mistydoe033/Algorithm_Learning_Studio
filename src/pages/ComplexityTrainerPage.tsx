@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { ComplexityPlayground } from '../components/ComplexityPlayground';
-import { SPACE_COMPLEXITY_CARDS, TIME_COMPLEXITY_CARDS } from '../lib/studyData';
+import { COMPLEXITY_TERMS, SPACE_COMPLEXITY_CARDS, TIME_COMPLEXITY_CARDS } from '../lib/studyData';
 
 interface Card {
   notation: string;
@@ -17,15 +17,18 @@ function ComplexityDrill({ title, cards, prefix }: { title: string; cards: Card[
   const [checked, setChecked] = useState(false);
 
   const selected = useMemo(() => cards.find((x) => x.notation === notation) ?? cards[0], [cards, notation]);
-  const plainChoices = useMemo(() => {
-    const distractors = cards.filter((c) => c.notation !== notation).slice(0, 3).map((c) => c.plain);
-    return [...distractors, selected.plain];
-  }, [cards, notation, selected.plain]);
+  const plainChoices = useMemo(() => cards.map((c) => c.plain), [cards]);
 
   const score = (nameAnswer === selected.name ? 1 : 0) + (plainAnswer === selected.plain ? 1 : 0);
 
+  useEffect(() => {
+    setNameAnswer('');
+    setPlainAnswer('');
+    setChecked(false);
+  }, [notation]);
+
   return (
-    <article className="card">
+    <article className="card drill-card">
       <h4>{title}</h4>
       <label className="field">
         Pick notation
@@ -37,9 +40,6 @@ function ComplexityDrill({ title, cards, prefix }: { title: string; cards: Card[
           ))}
         </select>
       </label>
-
-      <p><strong>Simple:</strong> {selected.notation} means {selected.name}.</p>
-      <p><strong>Deeper:</strong> {selected.deeper}</p>
 
       <label className="field">
         What is {selected.notation}?
@@ -65,24 +65,32 @@ function ComplexityDrill({ title, cards, prefix }: { title: string; cards: Card[
         </select>
       </label>
 
-      <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-        Check This Drill
-      </button>
+      <div className="drill-actions">
+        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+          Check This Drill
+        </button>
+      </div>
 
       {checked && (
-        <p>
-          Score: {score}/2
-          {' | '}
-          {nameAnswer === selected.name ? 'Name correct' : `Name should be: ${selected.name}`}
-          {' | '}
-          {plainAnswer === selected.plain ? 'Meaning correct' : `Meaning should be: ${selected.plain}`}
-        </p>
+        <div className="drill-score">
+          <p>
+            Score: {score}/2
+            {' | '}
+            {nameAnswer === selected.name ? 'Name correct' : `Name should be: ${selected.name}`}
+            {' | '}
+            {plainAnswer === selected.plain ? 'Meaning correct' : `Meaning should be: ${selected.plain}`}
+          </p>
+          <p><strong>Simple:</strong> {selected.notation} means {selected.name}.</p>
+          <p><strong>Deeper:</strong> {selected.deeper}</p>
+        </div>
       )}
     </article>
   );
 }
 
 export function ComplexityTrainerPage() {
+  const [showReference, setShowReference] = useState(false);
+
   return (
     <div className="page">
       <header className="hero">
@@ -97,29 +105,51 @@ export function ComplexityTrainerPage() {
       </section>
 
       <section className="panel">
-        <h3>Quick Reference</h3>
-        <div className="two-col">
-          <article className="card">
-            <h4>Time</h4>
-            <ul>
-              {TIME_COMPLEXITY_CARDS.map((c) => (
-                <li key={c.notation}>
-                  <strong>{c.notation}</strong>: {c.name} - {c.plain}
-                </li>
-              ))}
-            </ul>
-          </article>
-          <article className="card">
-            <h4>Space</h4>
-            <ul>
-              {SPACE_COMPLEXITY_CARDS.map((c) => (
-                <li key={c.notation}>
-                  <strong>{c.notation}</strong>: {c.name} - {c.plain}
-                </li>
-              ))}
-            </ul>
-          </article>
+        <h3>Term Help (Plain English)</h3>
+        <div className="glossary-grid">
+          {COMPLEXITY_TERMS.map((item) => (
+            <article className="card glossary-card" key={item.term}>
+              <h4>{item.term}</h4>
+              <p>{item.meaning}</p>
+            </article>
+          ))}
         </div>
+      </section>
+
+      <section className="panel">
+        <div className="panel-head">
+          <h3>Quick Reference</h3>
+          <button className="btn" type="button" onClick={() => setShowReference((prev) => !prev)}>
+            {showReference ? 'Hide Quick Reference' : 'Show Quick Reference'}
+          </button>
+        </div>
+
+        {!showReference && <p className="muted">Hidden so you can practice without seeing answers.</p>}
+
+        {showReference && (
+          <div className="two-col">
+            <article className="card">
+              <h4>Time</h4>
+              <ul>
+                {TIME_COMPLEXITY_CARDS.map((c) => (
+                  <li key={c.notation}>
+                    <strong>{c.notation}</strong>: {c.name} - {c.plain}
+                  </li>
+                ))}
+              </ul>
+            </article>
+            <article className="card">
+              <h4>Space</h4>
+              <ul>
+                {SPACE_COMPLEXITY_CARDS.map((c) => (
+                  <li key={c.notation}>
+                    <strong>{c.notation}</strong>: {c.name} - {c.plain}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          </div>
+        )}
       </section>
 
       <section className="panel">
