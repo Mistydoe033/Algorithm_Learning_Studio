@@ -98,7 +98,7 @@ export function ComplexityPlayground() {
       approach: 'BFS shortest path (unweighted)',
       time: 'O(V + E)',
       space: 'O(V)',
-      note: 'Queue + visited set are required for levels.',
+      note: 'Usually shortest by edge count in unweighted graphs, but may visit more nodes than DFS.',
     },
     {
       approach: 'Binary search on sorted data',

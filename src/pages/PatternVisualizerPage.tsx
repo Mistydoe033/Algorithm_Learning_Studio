@@ -1,23 +1,38 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { BenchmarkPanel } from '../components/BenchmarkPanel';
+import { PatternPicker } from '../components/PatternPicker';
 import { StudyNotes } from '../components/StudyNotes';
 import { StepPlayer } from '../components/StepPlayer';
-import { PATTERNS, patternByKey, type PatternKey } from '../data/patterns';
+import { patternByKey, type PatternKey } from '../data/patterns';
 import {
   keyCell,
   parseCells,
   parseEdges,
   parseIntList,
+  parseIntervals,
+  parseRangeUpdates,
+  parseWeightedEdges,
+  parseWords,
+  simulateBacktrackingSubsetSum,
   simulateBfsGrid,
   simulateBinarySearch,
   simulateDfsGraph,
+  simulateDijkstra,
   simulateFibMemo,
+  simulateGreedyIntervalScheduling,
   simulateHashDuplicate,
   simulateHashFrequency,
+  simulateHeapTopK,
+  simulateIntervalsMerge,
+  simulateMonotonicWindowMax,
+  simulatePrefixDifference,
   simulateSlidingWindow,
   simulateStackParens,
+  simulateTopologicalSort,
+  simulateTriePrefix,
   simulateTwoPointers,
+  simulateUnionFind,
   type Step,
 } from '../lib/algorithms';
 
@@ -29,7 +44,15 @@ function formatArrayViz(nums: number[], markers: Record<number, string>) {
   return `${idx}\n${val}\n${mark}`;
 }
 
-function renderGrid(rows: number, cols: number, blocked: Set<string>, visited: string[], frontier: string[], start: [number, number], current: [number, number] | null) {
+function renderGrid(
+  rows: number,
+  cols: number,
+  blocked: Set<string>,
+  visited: string[],
+  frontier: string[],
+  start: [number, number],
+  current: [number, number] | null,
+) {
   const f = new Set(frontier);
   const v = new Set(visited);
   const out: string[] = [];
@@ -69,6 +92,17 @@ interface PatternPreset {
   dfsStart?: number;
   edgesInput?: string;
   dpN?: number;
+  intervalsInput?: string;
+  updatesInput?: string;
+  rangeL?: number;
+  rangeR?: number;
+  heapK?: number;
+  dsuA?: number;
+  dsuB?: number;
+  wordsInput?: string;
+  triePrefix?: string;
+  weightedEdgesInput?: string;
+  dijkstraStart?: number;
 }
 
 const PATTERN_PRESETS: Record<PatternKey, PatternPreset[]> = {
@@ -88,7 +122,7 @@ const PATTERN_PRESETS: Record<PatternKey, PatternPreset[]> = {
     {
       id: 'neg_zero_dup',
       label: 'Negative/zero with duplicate',
-      description: 'Shows that duplicate detection works the same with negatives and zero.',
+      description: 'Duplicate detection works the same with negatives and zero.',
       numsInput: '-3,0,4,-3,9,12',
     },
   ],
@@ -102,13 +136,13 @@ const PATTERN_PRESETS: Record<PatternKey, PatternPreset[]> = {
     {
       id: 'all_same',
       label: 'Single repeated value',
-      description: 'All elements are identical, so one key accumulates all counts.',
+      description: 'One key accumulates all counts.',
       numsInput: '5,5,5,5,5',
     },
     {
-      id: 'freq_with_negatives',
+      id: 'with_negatives',
       label: 'Includes negatives',
-      description: 'Demonstrates counting across positive, negative, and zero values.',
+      description: 'Counts across positive, negative, and zero values.',
       numsInput: '4,-1,4,0,-1,4,2',
     },
   ],
@@ -116,21 +150,21 @@ const PATTERN_PRESETS: Record<PatternKey, PatternPreset[]> = {
     {
       id: 'pair_exists',
       label: 'Pair exists',
-      description: 'Sorted list contains a valid pair; pointers converge to a match.',
+      description: 'Sorted list contains a valid pair; pointers converge to match.',
       numsInput: '1,2,3,4,6,8',
       target: 10,
     },
     {
       id: 'no_pair',
       label: 'No pair matches target',
-      description: 'No two values hit the target, so pointers cross and return false.',
+      description: 'No two values hit target, so pointers cross.',
       numsInput: '1,3,5,7,9',
       target: 2,
     },
     {
       id: 'duplicate_pair',
       label: 'Uses duplicate values',
-      description: 'Pair can be formed with duplicate numbers while keeping sorted order.',
+      description: 'Pair can be formed with duplicate numbers.',
       numsInput: '1,2,2,3,4,6',
       target: 4,
     },
@@ -139,21 +173,21 @@ const PATTERN_PRESETS: Record<PatternKey, PatternPreset[]> = {
     {
       id: 'window_grows',
       label: 'Window expands and shrinks',
-      description: 'The running sum repeatedly exceeds k, forcing shrink steps.',
+      description: 'Running sum exceeds k repeatedly, forcing shrink steps.',
       numsInput: '2,1,3,2,1,1,1',
       windowK: 5,
     },
     {
       id: 'tight_limit',
       label: 'Tight limit',
-      description: 'Small threshold causes frequent shrinking and shorter windows.',
+      description: 'Small threshold causes frequent shrinking.',
       numsInput: '4,4,1,1,1',
       windowK: 4,
     },
     {
       id: 'none_valid',
       label: 'No valid window',
-      description: 'Each element is larger than k, so best valid length remains 0.',
+      description: 'Every value is larger than k, so best stays 0.',
       numsInput: '7,8,9',
       windowK: 5,
     },
@@ -162,19 +196,19 @@ const PATTERN_PRESETS: Record<PatternKey, PatternPreset[]> = {
     {
       id: 'valid_nested',
       label: 'Valid nested brackets',
-      description: 'Properly nested and balanced symbols should end with an empty stack.',
+      description: 'Properly nested and balanced symbols.',
       stackInput: '({[]})[]',
     },
     {
       id: 'mismatch',
       label: 'Mismatch example',
-      description: 'Closing order is wrong, so a mismatch is detected mid-scan.',
+      description: 'Closing order is wrong, so mismatch occurs.',
       stackInput: '([)]',
     },
     {
       id: 'unfinished',
       label: 'Unfinished open brackets',
-      description: 'Scan ends with leftover opens, so expression is invalid.',
+      description: 'Scan ends with leftover open symbols.',
       stackInput: '(([]',
     },
   ],
@@ -182,7 +216,7 @@ const PATTERN_PRESETS: Record<PatternKey, PatternPreset[]> = {
     {
       id: 'open_grid',
       label: 'Reachable open grid',
-      description: 'Most cells are reachable; queue grows by breadth-first layers.',
+      description: 'Most cells are reachable; queue grows by layers.',
       rows: 5,
       cols: 6,
       startR: 0,
@@ -192,7 +226,7 @@ const PATTERN_PRESETS: Record<PatternKey, PatternPreset[]> = {
     {
       id: 'narrow_paths',
       label: 'Narrow paths',
-      description: 'Walls create corridors, making frontier expansion more constrained.',
+      description: 'Walls create corridors and constrained frontier expansion.',
       rows: 5,
       cols: 5,
       startR: 0,
@@ -202,7 +236,7 @@ const PATTERN_PRESETS: Record<PatternKey, PatternPreset[]> = {
     {
       id: 'blocked_start',
       label: 'Blocked start edge case',
-      description: 'Start position is blocked, so traversal returns immediately.',
+      description: 'Start position is blocked so traversal exits immediately.',
       rows: 4,
       cols: 4,
       startR: 1,
@@ -222,7 +256,7 @@ const PATTERN_PRESETS: Record<PatternKey, PatternPreset[]> = {
     {
       id: 'disconnected',
       label: 'Disconnected graph',
-      description: 'Only the start node component is visited; others stay unseen.',
+      description: 'Only the start component is visited.',
       nodeCount: 8,
       dfsStart: 3,
       edgesInput: '0-1,1-2,3-4,4-5,6-7',
@@ -230,7 +264,7 @@ const PATTERN_PRESETS: Record<PatternKey, PatternPreset[]> = {
     {
       id: 'with_cycle',
       label: 'Graph with cycle',
-      description: 'Cycle requires visited checks to avoid infinite recursion.',
+      description: 'Cycle requires visited checks.',
       nodeCount: 6,
       dfsStart: 0,
       edgesInput: '0-1,1-2,2-3,3-1,3-4,4-5',
@@ -240,43 +274,267 @@ const PATTERN_PRESETS: Record<PatternKey, PatternPreset[]> = {
     {
       id: 'target_found',
       label: 'Target found',
-      description: 'Target exists exactly; lower-bound search lands on matching index.',
+      description: 'Target exists and lower-bound lands on its index.',
       numsInput: '1,3,5,7,9,11',
       target: 7,
     },
     {
       id: 'lower_bound',
-      label: 'Target missing (lower bound)',
-      description: 'Target is absent, so result is insertion index for sorted order.',
+      label: 'Target missing',
+      description: 'Target absent so result is insertion index.',
       numsInput: '1,3,5,7,9,11',
       target: 8,
     },
     {
       id: 'duplicates',
       label: 'Many duplicates',
-      description: 'Shows lower-bound behavior: returns first index of target duplicates.',
+      description: 'Lower-bound returns first matching duplicate index.',
       numsInput: '1,2,2,2,4,5',
       target: 2,
     },
   ],
   dp: [
+    { id: 'small_n', label: 'Small n', description: 'Few subproblems with visible memo hits.', dpN: 5 },
+    { id: 'medium_n', label: 'Medium n', description: 'Memoization effect is clearer.', dpN: 10 },
+    { id: 'larger_n', label: 'Larger n', description: 'State count grows while each state is solved once.', dpN: 20 },
+  ],
+  prefix_difference: [
     {
-      id: 'small_n',
-      label: 'Small n',
-      description: 'Few subproblems; easy to see memo hits and base cases.',
-      dpN: 5,
+      id: 'single_update',
+      label: 'Single range update',
+      description: 'Apply one diff update, rebuild array, and answer range sum.',
+      numsInput: '1,2,3,4,5,6',
+      updatesInput: '1-4-2',
+      rangeL: 1,
+      rangeR: 4,
     },
     {
-      id: 'medium_n',
-      label: 'Medium n',
-      description: 'Memoization effect is clearer with more repeated subproblems.',
-      dpN: 10,
+      id: 'multi_update',
+      label: 'Multiple updates',
+      description: 'Batch several updates then query interval quickly via prefix.',
+      numsInput: '2,2,2,2,2,2,2',
+      updatesInput: '0-3-1,2-6-2,5-6-3',
+      rangeL: 2,
+      rangeR: 6,
     },
     {
-      id: 'larger_n',
-      label: 'Larger n',
-      description: 'State count grows, but each state is still solved once.',
-      dpN: 20,
+      id: 'edge_update',
+      label: 'Boundary update',
+      description: 'Update touching final index to validate diff boundary handling.',
+      numsInput: '5,1,0,3,2',
+      updatesInput: '3-4-4',
+      rangeL: 0,
+      rangeR: 4,
+    },
+  ],
+  intervals: [
+    {
+      id: 'mixed_overlap',
+      label: 'Mixed overlap intervals',
+      description: 'Some ranges overlap and should merge.',
+      intervalsInput: '1-3,2-6,8-10,15-18',
+    },
+    {
+      id: 'nested',
+      label: 'Nested intervals',
+      description: 'Fully nested intervals collapse to a wider one.',
+      intervalsInput: '1-10,2-5,3-4,11-12',
+    },
+    {
+      id: 'touching',
+      label: 'Touching boundaries',
+      description: 'Boundary-touching ranges test merge conditions.',
+      intervalsInput: '1-2,2-3,3-4,7-8',
+    },
+  ],
+  heap: [
+    {
+      id: 'topk_small',
+      label: 'Top-k largest values',
+      description: 'Keep only k strongest values with bounded min-heap.',
+      numsInput: '9,4,7,1,5,3,8,6',
+      heapK: 3,
+    },
+    {
+      id: 'duplicates',
+      label: 'Repeated priorities',
+      description: 'Handles ties while preserving top-k size.',
+      numsInput: '5,5,5,2,9,9,1,8',
+      heapK: 4,
+    },
+    {
+      id: 'k_one',
+      label: 'k = 1',
+      description: 'Heap tracks only the single best value.',
+      numsInput: '2,11,4,8,6',
+      heapK: 1,
+    },
+  ],
+  monotonic_queue: [
+    {
+      id: 'window_max',
+      label: 'Window maximum',
+      description: 'Deque maintains descending values for fast max.',
+      numsInput: '1,3,-1,-3,5,3,6,7',
+      windowK: 3,
+    },
+    {
+      id: 'flat_values',
+      label: 'All equal values',
+      description: 'Equal values test stable deque maintenance.',
+      numsInput: '4,4,4,4,4',
+      windowK: 2,
+    },
+    {
+      id: 'large_window',
+      label: 'Window near full length',
+      description: 'Large k emphasizes out-of-window evictions.',
+      numsInput: '2,9,1,7,5,3',
+      windowK: 5,
+    },
+  ],
+  topological_sort: [
+    {
+      id: 'simple_dag',
+      label: 'Simple DAG',
+      description: 'Dependency ordering with multiple valid outputs.',
+      nodeCount: 6,
+      edgesInput: '0-1,0-2,1-3,2-3,3-4,2-5',
+    },
+    {
+      id: 'multi_sources',
+      label: 'Multiple sources',
+      description: 'Several zero-indegree starts enter queue initially.',
+      nodeCount: 7,
+      edgesInput: '0-3,1-3,2-4,3-5,4-5,5-6',
+    },
+    {
+      id: 'cycle_case',
+      label: 'Cycle detection case',
+      description: 'Cycle causes incomplete topological order.',
+      nodeCount: 4,
+      edgesInput: '0-1,1-2,2-0,2-3',
+    },
+  ],
+  union_find: [
+    {
+      id: 'connected_query',
+      label: 'Connected query',
+      description: 'Union edges then ask if two nodes share a component.',
+      nodeCount: 8,
+      edgesInput: '0-1,1-2,3-4,4-5,2-5,6-7',
+      dsuA: 0,
+      dsuB: 5,
+    },
+    {
+      id: 'disconnected_query',
+      label: 'Disconnected query',
+      description: 'Query nodes in different components.',
+      nodeCount: 8,
+      edgesInput: '0-1,1-2,3-4,5-6',
+      dsuA: 2,
+      dsuB: 6,
+    },
+    {
+      id: 'redundant_edges',
+      label: 'Redundant edges',
+      description: 'Repeated unions should be detected as already connected.',
+      nodeCount: 5,
+      edgesInput: '0-1,1-2,0-2,2-3,3-4',
+      dsuA: 0,
+      dsuB: 4,
+    },
+  ],
+  backtracking: [
+    {
+      id: 'subset_found',
+      label: 'Subset target found',
+      description: 'Search path finds combination reaching target sum.',
+      numsInput: '2,3,5,7,8',
+      target: 10,
+    },
+    {
+      id: 'subset_missing',
+      label: 'No valid subset',
+      description: 'Explores branches and backtracks to no-solution.',
+      numsInput: '4,6,9',
+      target: 5,
+    },
+    {
+      id: 'pruning_useful',
+      label: 'Pruning-heavy case',
+      description: 'Many branches are cut once partial sum exceeds target.',
+      numsInput: '1,2,3,4,5,6',
+      target: 9,
+    },
+  ],
+  trie: [
+    {
+      id: 'prefix_exists',
+      label: 'Prefix exists',
+      description: 'Inserted words share queried prefix.',
+      wordsInput: 'apple,app,apply,ape,bat',
+      triePrefix: 'app',
+    },
+    {
+      id: 'prefix_missing',
+      label: 'Prefix missing',
+      description: 'Query prefix fails traversal before completion.',
+      wordsInput: 'cat,car,carbon,dog',
+      triePrefix: 'cap',
+    },
+    {
+      id: 'single_letter',
+      label: 'Single-letter prefix',
+      description: 'Short prefixes should still resolve quickly.',
+      wordsInput: 'zebra,zen,zero,zip',
+      triePrefix: 'z',
+    },
+  ],
+  greedy: [
+    {
+      id: 'activity_selection',
+      label: 'Activity selection',
+      description: 'Select maximum non-overlapping intervals greedily by end.',
+      intervalsInput: '1-4,3-5,0-6,5-7,8-9,5-9',
+    },
+    {
+      id: 'already_non_overlap',
+      label: 'Already non-overlapping',
+      description: 'All intervals can be selected.',
+      intervalsInput: '1-2,3-4,5-6,7-8',
+    },
+    {
+      id: 'dense_overlap',
+      label: 'Dense overlap',
+      description: 'Heavy overlap forces frequent skips.',
+      intervalsInput: '1-10,2-3,3-4,4-5,6-7',
+    },
+  ],
+  dijkstra: [
+    {
+      id: 'weighted_graph',
+      label: 'Weighted undirected graph',
+      description: 'Relax edges to compute shortest paths from source.',
+      nodeCount: 6,
+      weightedEdgesInput: '0-1-4,0-2-1,2-1-2,1-3-1,2-3-5,3-4-3,4-5-2',
+      dijkstraStart: 0,
+    },
+    {
+      id: 'unreachable_nodes',
+      label: 'Unreachable nodes',
+      description: 'Disconnected vertices should remain unreachable.',
+      nodeCount: 7,
+      weightedEdgesInput: '0-1-2,1-2-3,2-3-1,4-5-1',
+      dijkstraStart: 0,
+    },
+    {
+      id: 'zero_weight',
+      label: 'Zero-weight edges',
+      description: 'Zero-cost edges still satisfy non-negative requirement.',
+      nodeCount: 5,
+      weightedEdgesInput: '0-1-0,1-2-2,0-3-5,2-4-1,3-4-1',
+      dijkstraStart: 0,
     },
   ],
 };
@@ -300,6 +558,19 @@ export function PatternVisualizerPage() {
   const [edgesInput, setEdgesInput] = useState('0-1,0-2,1-3,1-4,2-5,5-6');
 
   const [dpN, setDpN] = useState(10);
+
+  const [intervalsInput, setIntervalsInput] = useState('1-3,2-6,8-10,15-18');
+  const [updatesInput, setUpdatesInput] = useState('1-4-2');
+  const [rangeL, setRangeL] = useState(1);
+  const [rangeR, setRangeR] = useState(4);
+  const [heapK, setHeapK] = useState(3);
+  const [dsuA, setDsuA] = useState(0);
+  const [dsuB, setDsuB] = useState(1);
+  const [wordsInput, setWordsInput] = useState('apple,app,apply,ape,bat');
+  const [triePrefix, setTriePrefix] = useState('app');
+  const [weightedEdgesInput, setWeightedEdgesInput] = useState('0-1-4,0-2-1,2-1-2,1-3-1,2-3-5,3-4-3,4-5-2');
+  const [dijkstraStart, setDijkstraStart] = useState(0);
+
   const [activePresetId, setActivePresetId] = useState(PATTERN_PRESETS.hash_set[0]?.id ?? '');
 
   const pattern = patternByKey[patternKey];
@@ -323,6 +594,17 @@ export function PatternVisualizerPage() {
     if (preset.dfsStart !== undefined) setDfsStart(preset.dfsStart);
     if (preset.edgesInput !== undefined) setEdgesInput(preset.edgesInput);
     if (preset.dpN !== undefined) setDpN(preset.dpN);
+    if (preset.intervalsInput !== undefined) setIntervalsInput(preset.intervalsInput);
+    if (preset.updatesInput !== undefined) setUpdatesInput(preset.updatesInput);
+    if (preset.rangeL !== undefined) setRangeL(preset.rangeL);
+    if (preset.rangeR !== undefined) setRangeR(preset.rangeR);
+    if (preset.heapK !== undefined) setHeapK(preset.heapK);
+    if (preset.dsuA !== undefined) setDsuA(preset.dsuA);
+    if (preset.dsuB !== undefined) setDsuB(preset.dsuB);
+    if (preset.wordsInput !== undefined) setWordsInput(preset.wordsInput);
+    if (preset.triePrefix !== undefined) setTriePrefix(preset.triePrefix);
+    if (preset.weightedEdgesInput !== undefined) setWeightedEdgesInput(preset.weightedEdgesInput);
+    if (preset.dijkstraStart !== undefined) setDijkstraStart(preset.dijkstraStart);
   };
 
   useEffect(() => {
@@ -352,10 +634,57 @@ export function PatternVisualizerPage() {
         return simulateBinarySearch(parsedNums, target);
       case 'dp':
         return simulateFibMemo(dpN);
+      case 'prefix_difference':
+        return simulatePrefixDifference(parsedNums, parseRangeUpdates(updatesInput), rangeL, rangeR);
+      case 'intervals':
+        return simulateIntervalsMerge(parseIntervals(intervalsInput));
+      case 'heap':
+        return simulateHeapTopK(parsedNums, heapK);
+      case 'monotonic_queue':
+        return simulateMonotonicWindowMax(parsedNums, windowK);
+      case 'topological_sort':
+        return simulateTopologicalSort(nodeCount, parseEdges(edgesInput));
+      case 'union_find':
+        return simulateUnionFind(nodeCount, parseEdges(edgesInput), dsuA, dsuB);
+      case 'backtracking':
+        return simulateBacktrackingSubsetSum(parsedNums, target);
+      case 'trie':
+        return simulateTriePrefix(parseWords(wordsInput), triePrefix);
+      case 'greedy':
+        return simulateGreedyIntervalScheduling(parseIntervals(intervalsInput));
+      case 'dijkstra':
+        return simulateDijkstra(nodeCount, parseWeightedEdges(weightedEdgesInput), dijkstraStart);
       default:
         return { steps: [], result: null };
     }
-  }, [patternKey, parsedNums, target, windowK, stackInput, rows, cols, blockedInput, startR, startC, nodeCount, edgesInput, dfsStart, dpN]);
+  }, [
+    blockedInput,
+    dfsStart,
+    dijkstraStart,
+    dpN,
+    dsuA,
+    dsuB,
+    edgesInput,
+    heapK,
+    intervalsInput,
+    nodeCount,
+    numsInput,
+    parsedNums,
+    patternKey,
+    rangeL,
+    rangeR,
+    rows,
+    cols,
+    startR,
+    startC,
+    stackInput,
+    target,
+    triePrefix,
+    updatesInput,
+    weightedEdgesInput,
+    windowK,
+    wordsInput,
+  ]);
 
   const renderVisual = (step: Step) => {
     if (patternKey === 'two_pointers') {
@@ -365,7 +694,7 @@ export function PatternVisualizerPage() {
       return <pre className="code-block">{formatArrayViz(parsedNums, markers)}</pre>;
     }
 
-    if (patternKey === 'sliding_window') {
+    if (patternKey === 'sliding_window' || patternKey === 'monotonic_queue') {
       const markers: Record<number, string> = {};
       const left = Number(step.left ?? -1);
       const right = Number(step.right ?? -1);
@@ -418,6 +747,45 @@ export function PatternVisualizerPage() {
       return <pre className="code-block">Frequency Map:\n{freq}</pre>;
     }
 
+    if (patternKey === 'prefix_difference') {
+      return <pre className="code-block">{JSON.stringify(step, null, 2)}</pre>;
+    }
+
+    if (patternKey === 'intervals' || patternKey === 'greedy') {
+      const merged = Array.isArray(step.merged) ? step.merged : [];
+      const selected = Array.isArray(step.selected) ? step.selected : [];
+      return <pre className="code-block">merged={JSON.stringify(merged)} selected={JSON.stringify(selected)}</pre>;
+    }
+
+    if (patternKey === 'heap') {
+      const heap = Array.isArray(step.heap) ? step.heap : [];
+      return <pre className="code-block">Heap: {JSON.stringify(heap)}</pre>;
+    }
+
+    if (patternKey === 'topological_sort') {
+      const order = Array.isArray(step.order) ? step.order : [];
+      return <pre className="code-block">Order: {JSON.stringify(order)}</pre>;
+    }
+
+    if (patternKey === 'union_find') {
+      const parent = Array.isArray(step.parent) ? step.parent : [];
+      return <pre className="code-block">Parent: {JSON.stringify(parent)}</pre>;
+    }
+
+    if (patternKey === 'backtracking') {
+      const path = Array.isArray(step.path) ? step.path : [];
+      return <pre className="code-block">Path: {JSON.stringify(path)} | Sum: {String(step.sum ?? '')}</pre>;
+    }
+
+    if (patternKey === 'trie') {
+      return <pre className="code-block">{JSON.stringify(step, null, 2)}</pre>;
+    }
+
+    if (patternKey === 'dijkstra') {
+      const dist = Array.isArray(step.dist) ? step.dist : [];
+      return <pre className="code-block">Dist: {JSON.stringify(dist)}</pre>;
+    }
+
     return null;
   };
 
@@ -431,13 +799,7 @@ export function PatternVisualizerPage() {
       <section className="panel panel-spacious pattern-setup-panel">
         <div className="panel-head">
           <h3>Pattern Setup</h3>
-          <select value={patternKey} onChange={(e) => setPatternKey(e.target.value as PatternKey)}>
-            {PATTERNS.map((p) => (
-              <option key={p.key} value={p.key}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+          <PatternPicker value={patternKey} onChange={setPatternKey} />
         </div>
 
         <p><strong>What it does:</strong> {pattern.whatItDoes}</p>
@@ -482,30 +844,71 @@ export function PatternVisualizerPage() {
           </div>
         )}
 
-        {(patternKey === 'two_pointers' || patternKey === 'binary_search') && (
+        {(patternKey === 'two_pointers' || patternKey === 'binary_search' || patternKey === 'backtracking') && (
           <div className="form-grid">
             <label className="field">
-              Sorted input list
+              {patternKey === 'backtracking' ? 'Candidate numbers' : 'Sorted input list'}
               <input value={numsInput} onChange={(e) => setNumsInput(e.target.value)} />
             </label>
             <label className="field">
-              Target
+              {patternKey === 'backtracking' ? 'Target sum' : 'Target'}
               <input type="number" value={target} onChange={(e) => setTarget(Number.parseInt(e.target.value, 10) || 0)} />
             </label>
           </div>
         )}
 
-        {patternKey === 'sliding_window' && (
+        {(patternKey === 'sliding_window' || patternKey === 'monotonic_queue') && (
           <div className="form-grid">
             <label className="field">
-              Positive input list
+              Input list
               <input value={numsInput} onChange={(e) => setNumsInput(e.target.value)} />
             </label>
             <label className="field">
-              k (sum &lt;= k)
+              {patternKey === 'sliding_window' ? 'k (sum <= k)' : 'Window size k'}
               <input type="number" value={windowK} onChange={(e) => setWindowK(Number.parseInt(e.target.value, 10) || 0)} />
             </label>
           </div>
+        )}
+
+        {patternKey === 'heap' && (
+          <div className="form-grid">
+            <label className="field">
+              Input list
+              <input value={numsInput} onChange={(e) => setNumsInput(e.target.value)} />
+            </label>
+            <label className="field">
+              k (top-k)
+              <input type="number" value={heapK} onChange={(e) => setHeapK(Number.parseInt(e.target.value, 10) || 1)} />
+            </label>
+          </div>
+        )}
+
+        {patternKey === 'prefix_difference' && (
+          <div className="form-grid triple">
+            <label className="field wide">
+              Base numbers
+              <input value={numsInput} onChange={(e) => setNumsInput(e.target.value)} />
+            </label>
+            <label className="field wide">
+              Updates l-r-delta (comma-separated)
+              <input value={updatesInput} onChange={(e) => setUpdatesInput(e.target.value)} />
+            </label>
+            <label className="field">
+              Query left
+              <input type="number" value={rangeL} onChange={(e) => setRangeL(Number.parseInt(e.target.value, 10) || 0)} />
+            </label>
+            <label className="field">
+              Query right
+              <input type="number" value={rangeR} onChange={(e) => setRangeR(Number.parseInt(e.target.value, 10) || 0)} />
+            </label>
+          </div>
+        )}
+
+        {(patternKey === 'intervals' || patternKey === 'greedy') && (
+          <label className="field">
+            Intervals start-end (comma-separated)
+            <input value={intervalsInput} onChange={(e) => setIntervalsInput(e.target.value)} />
+          </label>
         )}
 
         {patternKey === 'stack' && (
@@ -525,11 +928,43 @@ export function PatternVisualizerPage() {
           </div>
         )}
 
-        {patternKey === 'dfs' && (
+        {(patternKey === 'dfs' || patternKey === 'topological_sort' || patternKey === 'union_find') && (
           <div className="form-grid triple">
             <label className="field">Node count<input type="number" value={nodeCount} onChange={(e) => setNodeCount(Number.parseInt(e.target.value, 10) || 1)} /></label>
-            <label className="field">Start node<input type="number" value={dfsStart} onChange={(e) => setDfsStart(Number.parseInt(e.target.value, 10) || 0)} /></label>
-            <label className="field wide">Edges u-v (comma-separated)<input value={edgesInput} onChange={(e) => setEdgesInput(e.target.value)} /></label>
+            {patternKey === 'dfs' && (
+              <label className="field">Start node<input type="number" value={dfsStart} onChange={(e) => setDfsStart(Number.parseInt(e.target.value, 10) || 0)} /></label>
+            )}
+            {patternKey === 'union_find' && (
+              <>
+                <label className="field">Query node A<input type="number" value={dsuA} onChange={(e) => setDsuA(Number.parseInt(e.target.value, 10) || 0)} /></label>
+                <label className="field">Query node B<input type="number" value={dsuB} onChange={(e) => setDsuB(Number.parseInt(e.target.value, 10) || 0)} /></label>
+              </>
+            )}
+            <label className="field wide">
+              {patternKey === 'topological_sort' ? 'Directed edges u-v (comma-separated)' : 'Edges u-v (comma-separated)'}
+              <input value={edgesInput} onChange={(e) => setEdgesInput(e.target.value)} />
+            </label>
+          </div>
+        )}
+
+        {patternKey === 'trie' && (
+          <div className="form-grid">
+            <label className="field">
+              Words (comma-separated)
+              <input value={wordsInput} onChange={(e) => setWordsInput(e.target.value)} />
+            </label>
+            <label className="field">
+              Prefix query
+              <input value={triePrefix} onChange={(e) => setTriePrefix(e.target.value)} />
+            </label>
+          </div>
+        )}
+
+        {patternKey === 'dijkstra' && (
+          <div className="form-grid triple">
+            <label className="field">Node count<input type="number" value={nodeCount} onChange={(e) => setNodeCount(Number.parseInt(e.target.value, 10) || 1)} /></label>
+            <label className="field">Start node<input type="number" value={dijkstraStart} onChange={(e) => setDijkstraStart(Number.parseInt(e.target.value, 10) || 0)} /></label>
+            <label className="field wide">Weighted edges u-v-w (comma-separated)<input value={weightedEdgesInput} onChange={(e) => setWeightedEdgesInput(e.target.value)} /></label>
           </div>
         )}
 

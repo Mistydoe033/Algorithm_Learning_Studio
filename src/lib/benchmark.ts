@@ -26,6 +26,26 @@ function estimateSpace(pattern: PatternKey, n: number): number {
       return 1;
     case 'dp':
       return n;
+    case 'prefix_difference':
+      return n;
+    case 'intervals':
+      return n;
+    case 'heap':
+      return Math.max(1, Math.floor(Math.sqrt(n)));
+    case 'monotonic_queue':
+      return Math.max(1, Math.floor(Math.sqrt(n)));
+    case 'topological_sort':
+      return n;
+    case 'union_find':
+      return n;
+    case 'backtracking':
+      return n;
+    case 'trie':
+      return n;
+    case 'greedy':
+      return n;
+    case 'dijkstra':
+      return n;
     default:
       return 1;
   }

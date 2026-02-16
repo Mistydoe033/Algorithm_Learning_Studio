@@ -6,10 +6,20 @@ export const USE_CASE_CORRECT: Record<PatternKey, string> = {
   two_pointers: 'Sorted arrays where two moving indices solve pair/interval problems.',
   sliding_window: 'Contiguous subarray/substring constraints with moving boundaries.',
   stack: 'Nested structure validation and monotonic processing.',
-  bfs: 'Shortest path in unweighted graph or level-order traversal.',
-  dfs: 'Deep traversal for components, cycles, and backtracking.',
-  binary_search: 'Sorted/monotonic search space where half can be discarded each step.',
+  bfs: 'Usually shortest path in unweighted graphs; explores level-by-level and may visit more nodes.',
+  dfs: 'Deep traversal for components/cycles/backtracking; does not guarantee shortest path.',
+  binary_search: 'Only for sorted data or monotonic predicates where half can be discarded each step.',
   dp: 'Overlapping subproblems where cached states avoid repeated work.',
+  prefix_difference: 'Range sums/updates using prefix or difference arrays.',
+  intervals: 'Merge/overlap reasoning over [start, end] ranges.',
+  heap: 'Repeated top-k or best-priority extraction.',
+  monotonic_queue: 'Sliding-window max/min in linear time.',
+  topological_sort: 'Dependency ordering in DAGs.',
+  union_find: 'Dynamic connectivity and component tracking.',
+  backtracking: 'Constraint-based combinatorial search with undo steps.',
+  trie: 'Fast prefix lookups over a set of strings.',
+  greedy: 'Optimization where local best choices stay globally optimal.',
+  dijkstra: 'Shortest paths in non-negative weighted graphs.',
 };
 
 export const TIME_CORRECT: Record<PatternKey, string> = {
@@ -22,6 +32,16 @@ export const TIME_CORRECT: Record<PatternKey, string> = {
   dfs: 'O(V + E)',
   binary_search: 'O(log n)',
   dp: 'O(states * transitions)',
+  prefix_difference: 'O(n + u + q)',
+  intervals: 'O(n log n)',
+  heap: 'O(n log k)',
+  monotonic_queue: 'O(n)',
+  topological_sort: 'O(V + E)',
+  union_find: 'O((V + E) * alpha(V))',
+  backtracking: 'O(branch^depth)',
+  trie: 'O(L)',
+  greedy: 'O(n log n)',
+  dijkstra: 'O((V + E) log V)',
 };
 
 export const SPACE_CORRECT: Record<PatternKey, string> = {
@@ -34,6 +54,16 @@ export const SPACE_CORRECT: Record<PatternKey, string> = {
   dfs: 'O(V)',
   binary_search: 'O(1)',
   dp: 'O(states)',
+  prefix_difference: 'O(n)',
+  intervals: 'O(n)',
+  heap: 'O(k)',
+  monotonic_queue: 'O(k)',
+  topological_sort: 'O(V)',
+  union_find: 'O(V)',
+  backtracking: 'O(depth)',
+  trie: 'O(total characters)',
+  greedy: 'O(1) to O(n)',
+  dijkstra: 'O(V)',
 };
 
 export const TIME_COMPLEXITY_CARDS: Array<{ notation: string; name: string; plain: string; deeper: string }> = [
