@@ -90,6 +90,7 @@ function ComplexityDrill({ title, cards, prefix }: { title: string; cards: Card[
 
 export function ComplexityTrainerPage() {
   const [showReference, setShowReference] = useState(false);
+  const [showTerms, setShowTerms] = useState(true);
 
   return (
     <div className="page">
@@ -105,15 +106,25 @@ export function ComplexityTrainerPage() {
       </section>
 
       <section className="panel">
-        <h3>Term Help (Plain English)</h3>
-        <div className="glossary-grid">
-          {COMPLEXITY_TERMS.map((item) => (
-            <article className="card glossary-card" key={item.term}>
-              <h4>{item.term}</h4>
-              <p>{item.meaning}</p>
-            </article>
-          ))}
+        <div className="panel-head">
+          <h3>Term Help (Plain English)</h3>
+          <button className="btn" type="button" onClick={() => setShowTerms((prev) => !prev)}>
+            {showTerms ? 'Hide Term Help' : 'Show Term Help'}
+          </button>
         </div>
+
+        {!showTerms && <p className="muted">Hidden. Show when you need term definitions.</p>}
+
+        {showTerms && (
+          <div className="glossary-grid">
+            {COMPLEXITY_TERMS.map((item) => (
+              <article className="card glossary-card" key={item.term}>
+                <h4>{item.term}</h4>
+                <p>{item.meaning}</p>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="panel">
