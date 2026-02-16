@@ -184,6 +184,11 @@ nav {
   line-height: 1.45;
 }
 
+.study-pattern-fit-card p {
+  margin: 6px 0;
+  line-height: 1.45;
+}
+
 .quiz-question-card {
   display: flex;
   flex-direction: column;
