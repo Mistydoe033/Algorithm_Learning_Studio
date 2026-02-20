@@ -7,13 +7,13 @@ export const PATTERN_PRESETS: Record<PatternKey, PatternPreset[]> = {
       id: 'dup_early',
       label: 'Duplicate appears early',
       description: 'A repeated value appears near the front, so HashSet can stop early.',
-      numsInput: '2,7,11,7,3,11',
+      numsInput: '2,7,11,7,3,11,12',
     },
     {
       id: 'all_unique',
       label: 'All unique values',
       description: 'No duplicates exist, so the full list is scanned and result is null.',
-      numsInput: '1,2,3,4,5,6',
+      numsInput: '1,2,3,4,5,6,12',
     },
     {
       id: 'neg_zero_dup',
