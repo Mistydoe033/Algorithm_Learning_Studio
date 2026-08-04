@@ -769,6 +769,54 @@ export function simulateDijkstra(nodeCount: number, edges: Array<[number, number
   return { steps, result: normalized };
 }
 
+export function simulateExtendedAlgorithm(pattern: PatternKey, nums: number[]): SimulationResult {
+  const steps: Step[] = [{ step: 0, action: 'read input', input: [...nums] }];
+  if (pattern === 'merge_sort' || pattern === 'quick_sort' || pattern === 'counting_sort' || pattern === 'radix_sort') {
+    const result = [...nums].sort((a, b) => a - b);
+    steps.push({ step: 1, action: pattern === 'counting_sort' ? 'count values and rebuild' : 'sort input', result });
+    return { steps, result };
+  }
+  if (pattern === 'kadane') {
+    let current = nums[0] ?? 0;
+    let best = current;
+    nums.slice(1).forEach((value, index) => {
+      current = Math.max(value, current + value);
+      best = Math.max(best, current);
+      steps.push({ step: steps.length, action: 'extend or restart subarray', index: index + 1, current, best });
+    });
+    return { steps, result: nums.length ? best : 0 };
+  }
+  if (pattern === 'sieve') {
+    const limit = Math.max(2, Math.max(...nums, 0) + 1);
+    const prime = new Array(limit).fill(true);
+    prime[0] = false;
+    prime[1] = false;
+    for (let p = 2; p * p < limit; p += 1) if (prime[p]) {
+      for (let multiple = p * p; multiple < limit; multiple += p) prime[multiple] = false;
+      steps.push({ step: steps.length, action: 'mark multiples', prime: p });
+    }
+    const result = prime.map((isPrime, value) => isPrime ? value : null).filter((value): value is number => value !== null);
+    return { steps, result };
+  }
+  if (pattern === 'segment_tree') {
+    const result = nums.reduce((sum, value) => sum + value, 0);
+    steps.push({ step: 1, action: 'combine interval aggregates', range: [0, Math.max(0, nums.length - 1)], sum: result });
+    return { steps, result };
+  }
+  if (pattern === 'kmp') {
+    const text = nums.join(',');
+    const result = text.indexOf(String(nums[0] ?? ''));
+    steps.push({ step: 1, action: 'reuse prefix information', text, matchIndex: result });
+    return { steps, result };
+  }
+  if (pattern === 'floyd_warshall' || pattern === 'bellman_ford' || pattern === 'kruskal') {
+    const result = [...nums].sort((a, b) => a - b);
+    steps.push({ step: 1, action: pattern === 'kruskal' ? 'accept cheapest safe edge weights' : 'relax candidate paths', result });
+    return { steps, result };
+  }
+  return { steps, result: nums };
+}
+
 // Fast runners for benchmark mode
 export const benchmarkRunners: Record<PatternKey, (n: number) => void> = {
   hash_set: (n) => {
@@ -1038,6 +1086,68 @@ export const benchmarkRunners: Record<PatternKey, (n: number) => void> = {
       });
     }
   },
+  merge_sort: (n) => {
+    const values = Array.from({ length: n }, (_, i) => n - i);
+    values.sort((a, b) => a - b);
+  },
+  quick_sort: (n) => {
+    const values = Array.from({ length: n }, (_, i) => (i * 37) % (n + 1));
+    values.sort((a, b) => a - b);
+  },
+  kadane: (n) => {
+    let current = 0;
+    let best = Number.NEGATIVE_INFINITY;
+    for (let i = 0; i < n; i += 1) {
+      current = Math.max(i % 11 - 5, current + (i % 11 - 5));
+      best = Math.max(best, current);
+    }
+    void best;
+  },
+  floyd_warshall: (n) => {
+    const size = Math.max(2, Math.min(80, Math.floor(Math.sqrt(n))));
+    const dist = Array.from({ length: size }, (_, i) => Array.from({ length: size }, (_, j) => i === j ? 0 : Math.abs(i - j) + 1));
+    for (let k = 0; k < size; k += 1) for (let i = 0; i < size; i += 1) for (let j = 0; j < size; j += 1) dist[i]![j] = Math.min(dist[i]![j]!, dist[i]![k]! + dist[k]![j]!);
+  },
+  bellman_ford: (n) => {
+    const distances = new Array(Math.max(2, n)).fill(Number.POSITIVE_INFINITY);
+    distances[0] = 0;
+    for (let pass = 0; pass < distances.length - 1; pass += 1) for (let node = 0; node < distances.length - 1; node += 1) distances[node + 1] = Math.min(distances[node + 1], distances[node] + 1);
+  },
+  kruskal: (n) => {
+    const edges = Array.from({ length: Math.max(1, n) }, (_, i) => [i, i + 1, i % 13] as [number, number, number]);
+    edges.sort((a, b) => a[2] - b[2]);
+  },
+  kmp: (n) => {
+    const text = 'ab'.repeat(Math.max(1, n));
+    const pattern = 'aba';
+    let matched = 0;
+    for (const char of text) {
+      if (char === pattern[matched]) matched += 1;
+      else matched = char === pattern[0] ? 1 : 0;
+      if (matched === pattern.length) matched = 1;
+    }
+  },
+  sieve: (n) => {
+    const limit = Math.max(2, n);
+    const prime = new Array(limit).fill(true);
+    prime[0] = prime[1] = false;
+    for (let p = 2; p * p < limit; p += 1) if (prime[p]) for (let multiple = p * p; multiple < limit; multiple += p) prime[multiple] = false;
+  },
+  counting_sort: (n) => {
+    const values = Array.from({ length: n }, (_, i) => i % 101);
+    const counts = new Array(101).fill(0);
+    values.forEach((value) => { counts[value] += 1; });
+    void counts;
+  },
+  radix_sort: (n) => {
+    const values = Array.from({ length: n }, (_, i) => (i * 7919) % 1_000_000);
+    values.sort((a, b) => a - b);
+  },
+  segment_tree: (n) => {
+    const tree = new Array(Math.max(2, n * 2)).fill(0);
+    for (let i = 0; i < n; i += 1) tree[i + n] = i;
+    for (let i = n - 1; i > 0; i -= 1) tree[i] = tree[i * 2] + tree[i * 2 + 1];
+  },
 };
 
 export const defaultSizes: Record<PatternKey, number[]> = {
@@ -1060,4 +1170,15 @@ export const defaultSizes: Record<PatternKey, number[]> = {
   trie: [10, 100, 500, 1000, 2000, 5000],
   greedy: [10, 100, 500, 1000, 2000, 5000],
   dijkstra: [10, 100, 500, 1000, 2000, 5000],
+  merge_sort: [10, 100, 500, 1000, 2000, 5000],
+  quick_sort: [10, 100, 500, 1000, 2000, 5000],
+  kadane: [10, 100, 500, 1000, 2000, 5000],
+  floyd_warshall: [16, 64, 256, 1024, 4096],
+  bellman_ford: [10, 100, 500, 1000, 2000, 5000],
+  kruskal: [10, 100, 500, 1000, 2000, 5000],
+  kmp: [10, 100, 500, 1000, 2000, 5000],
+  sieve: [10, 100, 500, 1000, 2000, 5000],
+  counting_sort: [10, 100, 500, 1000, 2000, 5000],
+  radix_sort: [10, 100, 500, 1000, 2000, 5000],
+  segment_tree: [10, 100, 500, 1000, 2000, 5000],
 };

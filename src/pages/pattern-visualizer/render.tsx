@@ -104,5 +104,5 @@ export function renderPatternStepVisual(input: PatternVisualRenderInput): JSX.El
     return <pre className="code-block">Dist: {JSON.stringify(dist)}</pre>;
   }
 
-  return null;
+  return <pre className="code-block">{JSON.stringify(step, null, 2)}</pre>;
 }

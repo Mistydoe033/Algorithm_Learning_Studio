@@ -25,7 +25,9 @@ import {
   simulateTriePrefix,
   simulateTwoPointers,
   simulateUnionFind,
+  simulateExtendedAlgorithm,
 } from '../../lib/algorithms';
+import { EXTENDED_PATTERN_KEYS } from '../../data/patterns';
 import type { PatternPreset, PatternSimulationInput, PatternVisualizerState } from './types';
 
 export function formatArrayViz(nums: number[], markers: Record<number, string>) {
@@ -161,6 +163,7 @@ export function simulatePattern(input: PatternSimulationInput) {
         input.dijkstraStart,
       );
     default:
+      if (EXTENDED_PATTERN_KEYS.includes(input.patternKey)) return simulateExtendedAlgorithm(input.patternKey, input.parsedNums);
       return { steps: [], result: null };
   }
 }

@@ -2,6 +2,7 @@ import { BenchmarkPanel } from '../components/BenchmarkPanel';
 import { PatternPicker } from '../components/PatternPicker';
 import { StudyNotes } from '../components/StudyNotes';
 import { StepPlayer } from '../components/StepPlayer';
+import { EXTENDED_PATTERN_KEYS } from '../data/patterns';
 import { renderPatternStepVisual } from './pattern-visualizer/render';
 import { usePatternVisualizerController } from './pattern-visualizer/usePatternVisualizerController';
 
@@ -318,6 +319,13 @@ export function PatternVisualizerPage() {
           <label className="field">
             n
             <input type="number" value={dpN} onChange={(e) => setNumberField('dpN', Number.parseInt(e.target.value, 10) || 0)} />
+          </label>
+        )}
+
+        {EXTENDED_PATTERN_KEYS.includes(patternKey) && (
+          <label className="field">
+            Algorithm input values (comma-separated)
+            <input value={numsInput} onChange={(e) => setTextField('numsInput', e.target.value)} />
           </label>
         )}
 

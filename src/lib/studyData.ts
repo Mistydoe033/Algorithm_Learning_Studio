@@ -20,6 +20,17 @@ export const USE_CASE_CORRECT: Record<PatternKey, string> = {
   trie: 'Fast prefix lookups over a set of strings.',
   greedy: 'Optimization where local best choices stay globally optimal.',
   dijkstra: 'Shortest paths in non-negative weighted graphs.',
+  merge_sort: 'Stable divide-and-conquer sorting by merging ordered halves.',
+  quick_sort: 'In-memory sorting by partitioning around a pivot.',
+  kadane: 'Maximum sum of a non-empty contiguous subarray.',
+  floyd_warshall: 'All-pairs shortest paths in a weighted graph.',
+  bellman_ford: 'Shortest paths with negative-edge support and cycle detection.',
+  kruskal: 'Minimum spanning tree construction from a weighted edge list.',
+  kmp: 'Linear-time substring search using prefix-suffix reuse.',
+  sieve: 'Prime enumeration by marking composite multiples.',
+  counting_sort: 'Bounded-range integer sorting through frequency counts.',
+  radix_sort: 'Stable digit-by-digit sorting for non-negative integers.',
+  segment_tree: 'Logarithmic range queries with point updates.',
 };
 
 export const TIME_CORRECT: Record<PatternKey, string> = {
@@ -42,6 +53,17 @@ export const TIME_CORRECT: Record<PatternKey, string> = {
   trie: 'O(L)',
   greedy: 'O(n log n)',
   dijkstra: 'O((V + E) log V)',
+  merge_sort: 'O(n log n)',
+  quick_sort: 'O(n log n) average',
+  kadane: 'O(n)',
+  floyd_warshall: 'O(V^3)',
+  bellman_ford: 'O(VE)',
+  kruskal: 'O(E log E)',
+  kmp: 'O(n + m)',
+  sieve: 'O(n log log n)',
+  counting_sort: 'O(n + k)',
+  radix_sort: 'O(d(n + b))',
+  segment_tree: 'O(log n) per query/update',
 };
 
 export const SPACE_CORRECT: Record<PatternKey, string> = {
@@ -64,6 +86,17 @@ export const SPACE_CORRECT: Record<PatternKey, string> = {
   trie: 'O(total characters)',
   greedy: 'O(1) to O(n)',
   dijkstra: 'O(V)',
+  merge_sort: 'O(n)',
+  quick_sort: 'O(log n) average',
+  kadane: 'O(1)',
+  floyd_warshall: 'O(V^2)',
+  bellman_ford: 'O(V)',
+  kruskal: 'O(V)',
+  kmp: 'O(m)',
+  sieve: 'O(n)',
+  counting_sort: 'O(k)',
+  radix_sort: 'O(n + b)',
+  segment_tree: 'O(n)',
 };
 
 export const TIME_COMPLEXITY_CARDS: Array<{ notation: string; name: string; plain: string; deeper: string }> = [

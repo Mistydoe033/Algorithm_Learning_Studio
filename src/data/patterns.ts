@@ -17,7 +17,32 @@ export type PatternKey =
   | 'backtracking'
   | 'trie'
   | 'greedy'
-  | 'dijkstra';
+  | 'dijkstra'
+  | 'merge_sort'
+  | 'quick_sort'
+  | 'kadane'
+  | 'floyd_warshall'
+  | 'bellman_ford'
+  | 'kruskal'
+  | 'kmp'
+  | 'sieve'
+  | 'counting_sort'
+  | 'radix_sort'
+  | 'segment_tree';
+
+export const EXTENDED_PATTERN_KEYS: PatternKey[] = [
+  'merge_sort',
+  'quick_sort',
+  'kadane',
+  'floyd_warshall',
+  'bellman_ford',
+  'kruskal',
+  'kmp',
+  'sieve',
+  'counting_sort',
+  'radix_sort',
+  'segment_tree',
+];
 
 export interface PatternInfo {
   key: PatternKey;
@@ -270,6 +295,138 @@ export const PATTERNS: PatternInfo[] = [
     invariant: 'When a node is popped with minimal tentative distance, that distance is final.',
     pitfalls: ['Using negative weights', 'Not skipping stale heap entries', 'Incorrect relax condition'],
     edgeCases: ['Unreachable nodes', 'Multiple equal shortest paths', 'Zero-weight edges'],
+  },
+  {
+    key: 'merge_sort',
+    name: 'Merge Sort',
+    whatItDoes: 'Splits data into halves and merges sorted halves back together.',
+    whenToUse: 'Stable sorting, predictable O(n log n) sorting, and linked-list-friendly sorting.',
+    timeComplexity: 'O(n log n)',
+    spaceComplexity: 'O(n)',
+    englishLine: 'Merge sort keeps dividing, then performs linear merges at each level.',
+    invariant: 'Each merged segment is sorted before it is returned to its caller.',
+    pitfalls: ['Dropping leftovers after one half is exhausted', 'Wrong midpoint bounds', 'Mutating input unexpectedly'],
+    edgeCases: ['Empty input', 'One item', 'Duplicate values'],
+  },
+  {
+    key: 'quick_sort',
+    name: 'Quick Sort',
+    whatItDoes: 'Partitions values around a pivot and recursively sorts both sides.',
+    whenToUse: 'Fast average-case in-memory sorting when stable order is not required.',
+    timeComplexity: 'O(n log n) average, O(n^2) worst-case',
+    spaceComplexity: 'O(log n) average recursion space',
+    englishLine: 'A balanced pivot keeps partitions small; repeated bad pivots cause quadratic work.',
+    invariant: 'After partitioning, left values belong before the pivot and right values after it.',
+    pitfalls: ['Repeatedly choosing an extreme pivot', 'Incorrect partition bounds', 'Infinite recursion on duplicates'],
+    edgeCases: ['Already sorted input', 'All equal values', 'Empty input'],
+  },
+  {
+    key: 'kadane',
+    name: "Kadane's Algorithm",
+    whatItDoes: 'Finds the maximum sum of a non-empty contiguous subarray.',
+    whenToUse: 'Maximum subarray or running profit-style contiguous optimization problems.',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(1)',
+    englishLine: 'Keep the best sum ending here and the best sum seen anywhere.',
+    invariant: 'current is the best subarray sum that ends at the current index.',
+    pitfalls: ['Initializing to zero for an all-negative array', 'Confusing subsequence with subarray', 'Losing the global best'],
+    edgeCases: ['All negative values', 'One value', 'Empty input'],
+  },
+  {
+    key: 'floyd_warshall',
+    name: 'Floyd-Warshall',
+    whatItDoes: 'Computes shortest paths between every pair of graph vertices.',
+    whenToUse: 'Small dense graphs where all-pairs shortest paths are required.',
+    timeComplexity: 'O(V^3)',
+    spaceComplexity: 'O(V^2)',
+    englishLine: 'Try each vertex as an intermediate and keep the cheaper route.',
+    invariant: 'After intermediate k, distances use only intermediates from the allowed prefix.',
+    pitfalls: ['Wrong loop order', 'Mutating the input matrix unexpectedly', 'Ignoring negative cycles'],
+    edgeCases: ['Disconnected vertices', 'Zero-weight edges', 'Negative cycle'],
+  },
+  {
+    key: 'bellman_ford',
+    name: 'Bellman-Ford',
+    whatItDoes: 'Finds single-source shortest paths even when edges may be negative.',
+    whenToUse: 'Weighted graphs with negative edges or when negative-cycle detection matters.',
+    timeComplexity: 'O(VE)',
+    spaceComplexity: 'O(V)',
+    englishLine: 'Relax every edge V-1 times, then check once more for a negative cycle.',
+    invariant: 'After pass k, every shortest path using at most k edges has been considered.',
+    pitfalls: ['Relaxing from unreachable nodes', 'Skipping the extra cycle check', 'Using it without bounded iteration'],
+    edgeCases: ['Negative edge', 'Reachable negative cycle', 'Unreachable vertex'],
+  },
+  {
+    key: 'kruskal',
+    name: "Kruskal's MST",
+    whatItDoes: 'Builds a minimum spanning tree by accepting safe edges in weight order.',
+    whenToUse: 'Minimum spanning tree problems with an edge list and DSU available.',
+    timeComplexity: 'O(E log E)',
+    spaceComplexity: 'O(V)',
+    englishLine: 'Sort edges, skip cycle-forming edges, and stop after V-1 accepted edges.',
+    invariant: 'Accepted edges remain acyclic and form the cheapest forest possible so far.',
+    pitfalls: ['Forgetting to sort by weight', 'Accepting an edge inside one component', 'Not detecting disconnected graphs'],
+    edgeCases: ['Disconnected graph', 'Tied edge weights', 'Parallel edges'],
+  },
+  {
+    key: 'kmp',
+    name: 'KMP String Search',
+    whatItDoes: 'Searches for a pattern without moving the text pointer backward.',
+    whenToUse: 'Repeated substring search where linear worst-case time matters.',
+    timeComplexity: 'O(n + m)',
+    spaceComplexity: 'O(m)',
+    englishLine: 'The prefix table tells the pattern where to resume after a mismatch.',
+    invariant: 'The prefix index represents a matched prefix of the pattern.',
+    pitfalls: ['Building the prefix table incorrectly', 'Resetting to zero unnecessarily', 'Off-by-one match indexes'],
+    edgeCases: ['Empty pattern', 'Pattern longer than text', 'Repeated prefix characters'],
+  },
+  {
+    key: 'sieve',
+    name: 'Sieve of Eratosthenes',
+    whatItDoes: 'Marks composite numbers to enumerate primes below a limit.',
+    whenToUse: 'Many prime queries or one large range of candidate integers.',
+    timeComplexity: 'O(n log log n)',
+    spaceComplexity: 'O(n)',
+    englishLine: 'Start crossing off multiples at p squared because smaller ones already have factors.',
+    invariant: 'An unmarked candidate has no prime factor among the earlier primes.',
+    pitfalls: ['Treating 1 as prime', 'Starting at p instead of p squared', 'Using the wrong upper bound'],
+    edgeCases: ['n <= 2', 'n just above a square', 'Large limit'],
+  },
+  {
+    key: 'counting_sort',
+    name: 'Counting Sort',
+    whatItDoes: 'Counts bounded integer values and rebuilds them in sorted order.',
+    whenToUse: 'Integer values have a small, known range compared with input length.',
+    timeComplexity: 'O(n + k)',
+    spaceComplexity: 'O(k)',
+    englishLine: 'The count array replaces comparisons with frequency accumulation.',
+    invariant: 'count[x] equals the number of processed values equal to x.',
+    pitfalls: ['Allocating an enormous sparse range', 'Wrong max-value boundary', 'Ignoring negative values without a plan'],
+    edgeCases: ['All equal values', 'Only zero', 'Empty input'],
+  },
+  {
+    key: 'radix_sort',
+    name: 'Radix Sort',
+    whatItDoes: 'Sorts non-negative integers digit by digit using stable passes.',
+    whenToUse: 'Fixed-format integers where digit passes beat comparison sorting.',
+    timeComplexity: 'O(d(n + b))',
+    spaceComplexity: 'O(n + b)',
+    englishLine: 'Stable least-significant-digit passes gradually establish complete numeric order.',
+    invariant: 'After each digit pass, values are ordered by all processed lower digits.',
+    pitfalls: ['Using an unstable digit pass', 'Forgetting zero values', 'Handling negatives without a strategy'],
+    edgeCases: ['Empty input', 'All zeroes', 'Different digit lengths'],
+  },
+  {
+    key: 'segment_tree',
+    name: 'Segment Tree',
+    whatItDoes: 'Answers range queries and point updates in logarithmic time.',
+    whenToUse: 'Many changing range-sum, minimum, or maximum queries.',
+    timeComplexity: 'O(log n) query/update',
+    spaceComplexity: 'O(n)',
+    englishLine: 'Store aggregates for intervals so each query visits only logarithmically many nodes.',
+    invariant: 'Each tree node stores the aggregate of exactly its represented interval.',
+    pitfalls: ['Mixing inclusive and exclusive bounds', 'Forgetting to update ancestors', 'Building an undersized tree'],
+    edgeCases: ['Single element', 'Full-range query', 'Point update at a boundary'],
   },
 ];
 

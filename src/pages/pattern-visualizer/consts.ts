@@ -1,7 +1,7 @@
 import type { PatternKey } from '../../data/patterns';
 import type { PatternPreset, PatternVisualizerState } from './types';
 
-export const PATTERN_PRESETS: Record<PatternKey, PatternPreset[]> = {
+const BASE_PATTERN_PRESETS: Partial<Record<PatternKey, PatternPreset[]>> = {
   hash_set: [
     {
       id: 'dup_early',
@@ -433,6 +433,25 @@ export const PATTERN_PRESETS: Record<PatternKey, PatternPreset[]> = {
       dijkstraStart: 0,
     },
   ],
+};
+
+const EXTENDED_PATTERN_PRESETS: Partial<Record<PatternKey, PatternPreset[]>> = {
+  merge_sort: [{ id: 'default', label: 'Split and merge', description: 'Divide the list into halves and merge sorted halves.', numsInput: '5,2,3,1,4' }],
+  quick_sort: [{ id: 'default', label: 'Pivot partition', description: 'Partition around a pivot and recursively sort both sides.', numsInput: '4,1,7,2,2' }],
+  kadane: [{ id: 'default', label: 'Mixed gains and losses', description: 'Track the strongest contiguous run through positive and negative values.', numsInput: '-2,1,-3,4,-1,2,1,-5,4' }],
+  floyd_warshall: [{ id: 'default', label: 'All-pairs matrix', description: 'Use the current list as a compact weighted-distance demo.', numsInput: '0,3,10,2,5' }],
+  bellman_ford: [{ id: 'default', label: 'Repeated relaxation', description: 'Relax the demo values across repeated passes.', numsInput: '4,5,-2,3' }],
+  kruskal: [{ id: 'default', label: 'Cheapest safe edges', description: 'Process edge weights in increasing order and skip cycles.', numsInput: '4,1,3,2,5' }],
+  kmp: [{ id: 'default', label: 'Prefix reuse', description: 'Build reusable prefix information for repeated text patterns.', numsInput: '1,2,1,2,3' }],
+  sieve: [{ id: 'default', label: 'Mark composite values', description: 'Cross off multiples to leave prime candidates.', numsInput: '2,3,4,5,6,7,8,9,10' }],
+  counting_sort: [{ id: 'default', label: 'Bounded integer range', description: 'Count values, then emit them in ascending order.', numsInput: '4,2,2,8,3,3,1' }],
+  radix_sort: [{ id: 'default', label: 'Digit passes', description: 'Sort non-negative values one decimal digit at a time.', numsInput: '170,45,75,90,802,24,2,66' }],
+  segment_tree: [{ id: 'default', label: 'Range aggregate tree', description: 'Combine interval values and update one point.', numsInput: '2,1,5,3,4' }],
+};
+
+export const PATTERN_PRESETS: Record<PatternKey, PatternPreset[]> = {
+  ...(BASE_PATTERN_PRESETS as Record<PatternKey, PatternPreset[]>),
+  ...EXTENDED_PATTERN_PRESETS,
 };
 
 export const DEFAULT_PATTERN_VISUALIZER_STATE: PatternVisualizerState = {

@@ -2,6 +2,7 @@ import { PatternPicker } from '../../../components/PatternPicker';
 import { DIFFICULTY_ORDER } from '../consts';
 import { categoryToLabel } from '../helpers';
 import { QuizFeedback } from './QuizFeedback';
+import { AlgorithmChallengeSection } from './AlgorithmChallengeSection';
 import type { InteractiveQuizSectionProps } from './types';
 
 export function InteractiveQuizSection({ viewModel, actions }: InteractiveQuizSectionProps) {
@@ -195,6 +196,8 @@ export function InteractiveQuizSection({ viewModel, actions }: InteractiveQuizSe
           )}
         </article>
       )}
+
+      <AlgorithmChallengeSection />
     </section>
   );
 }
